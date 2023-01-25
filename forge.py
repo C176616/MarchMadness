@@ -4,6 +4,7 @@ import pandas as pd
 import os
 import numpy as np
 import plotly.io as pio
+from itertools import cycle
 
 from src.game import Game
 from src.team import Team
@@ -31,6 +32,13 @@ df_names = pd.read_csv(namecsv)
 
 df_stage1Combinations = pd.read_csv(predictionscsv)
 # tourn.populatePredictionsList()
+df_comb = df_seeds.merge(df_names[['TeamID','TeamName']], left_on = 'TeamID', right_on='TeamID')[['Seed','TeamID','TeamName']]
+df_comb2 = df_slots.merge(df_comb, left_on="StrongSeed", right_on="Seed")[['Slot','StrongSeed','WeakSeed','TeamID','TeamName',]]
+df_comb2 = df_comb2.rename(columns={'TeamID':'Team1ID', 'TeamName':'Team1Name'})
+df_comb3 = df_comb2.merge(df_comb, how='left',left_on="WeakSeed", right_on="Seed")[['Slot','StrongSeed','WeakSeed','Team1ID','Team1Name','TeamID','TeamName',]]
+df_info = df_comb3.rename(columns={'TeamID':'Team2ID', 'TeamName':'Team2Name'})
+
+print(df_info)
 
 
 ## Initialize the tournament structure
@@ -185,65 +193,132 @@ tourn.getNode('R1Z1').right.parent = tourn.getNode('R1Z1')
 
 tourn.reverseLevelOrder()
 
-tourn.getNode('W12').team1Seed = 'W12a'
-tourn.getNode('W12').team2Seed = 'W12b'
+# tourn.getNode('W12').team1Seed = 'W12a'
+# tourn.getNode('W12').team2Seed = 'W12b'
 
-tourn.getNode('X11').team1Seed = 'X11a'
-tourn.getNode('X11').team2Seed = 'X11b'
+# tourn.getNode('X11').team1Seed = 'X11a'
+# tourn.getNode('X11').team2Seed = 'X11b'
 
-tourn.getNode('Y16').team1Seed = 'Y16a'
-tourn.getNode('Y16').team2Seed = 'Y16b'
+# tourn.getNode('Y16').team1Seed = 'Y16a'
+# tourn.getNode('Y16').team2Seed = 'Y16b'
 
-tourn.getNode('Z16').team1Seed = 'Z16a'
-tourn.getNode('Z16').team2Seed = 'Z16b'
+# tourn.getNode('Z16').team1Seed = 'Z16a'
+# tourn.getNode('Z16').team2Seed = 'Z16b'
 
-tourn.populateTeams(df_slots, df_seeds, df_names)
+preRound1Slots = ['W12','X11','Y16','Z16']
+cycleList = cycle(preRound1Slots)
 
+for x in range(3):
+    i = next(cycleList)
+    slot = df_info[df_info['Slot']==i]
+    tourn.getNode(i).team1 = Team(slot['StrongSeed'].values[0],slot['Team1ID'].values[0],slot['Team1Name'].values[0])
+    tourn.getNode(i).team2 = Team(slot['WeakSeed'].values[0],slot['Team2ID'].values[0],slot['Team2Name'].values[0])
+
+
+
+# slot = df_info[df_info['Slot']==game.value]
+# print(slot['StrongSeed'].values[0])
+# game.team1 = Team(slot['StrongSeed'].values[0],slot['Team1ID'].values[0],slot['Team1Name'].values[0])
+# game.team2 = Team(slot['WeakSeed'].values[0],slot['Team2ID'].values[0],slot['Team2Name'].values[0])
+
+# tourn.getNode('X11').team1Seed = 'X11a'
+# tourn.getNode('X11').team2Seed = 'X11b'
+
+# tourn.getNode('Y16').team1Seed = 'Y16a'
+# tourn.getNode('Y16').team2Seed = 'Y16b'
+
+# tourn.getNode('Z16').team1Seed = 'Z16a'
+# tourn.getNode('Z16').team2Seed = 'Z16b'
+
+tourn.populateTeams(df_info)
 
 tourn.populatePredictionsList(df_stage1Combinations)
-tourn.reverseLevelOrder()
-# print(tourn.predictionsList)
-## Execute the tournament
+
 for game in tourn.nodeList:
-    print("game:", game.value, game.team1Seed, game.team2Seed)
+    print("game:", game.value, game.team1, game.team2)
 #     print("parent",game.parent)
 #     print(game.value, game.team1ID, game.team2ID)
-    result = tourn.getMatchPrediction(game.team1ID,game.team2ID)
-    print("result: ",result[0])
+    result = tourn.getMatchPrediction(int(game.team1.teamID),int(game.team2.teamID))
+    print("result: ",result[0], "chance:", result[1])
+    game.winPct = result[1]
     if(game.parent==None):
         print("no parents")
         if (result[0] == 1):
             print(1)
-            game.winnerID = game.team1ID   
+            game.winner = game.team1  
         elif(result[0]== 0):
             print(2)
-            game.winnerID = game.team2ID        
+            game.winner = game.team2        
     elif (game==game.parent.left):
         print('left')
         if (result[0] == 1):
             print(1)
-            game.winnerID = game.team1ID
-            game.parent.team1Seed = game.team1Seed    
-            game.parent.team1ID = game.team1ID  
+            game.winner = game.team1
+            game.parent.team1 = game.team1   
+
         elif(result[0]== 0):
             print(2)
-            game.winnerID = game.team2ID        
-            game.parent.team1Seed = game.team2Seed
-            game.parent.team1ID = game.team2ID
+            game.winner = game.team2       
+            game.parent.team1 = game.team2
+
     elif (game==game.parent.right):
         print('right')
         if (result[0] == 1):
             print(3)
-            game.winnerID = game.team2ID
-            game.parent.team2Seed = game.team1Seed
-            game.parent.team2ID = game.team1ID
+            game.winner = game.team2
+            game.parent.team2 = game.team1
+
         elif(result[0]== 0):
             print(4)
-            game.winnerID = game.team1ID
-            game.parent.team2Seed = game.team2Seed
-            game.parent.team2ID = game.team2ID
+            game.winner = game.team1
+            game.parent.team2 = game.team2
+
     else:
         print("no parents :(")
+
+# tourn.reverseLevelOrder()
+# # print(tourn.predictionsList)
+# ## Execute the tournament
+# for game in tourn.nodeList:
+#     print("game:", game.value, game.team1Seed, game.team2Seed)
+# #     print("parent",game.parent)
+# #     print(game.value, game.team1ID, game.team2ID)
+#     result = tourn.getMatchPrediction(game.team1ID,game.team2ID)
+#     print("result: ",result[0])
+#     if(game.parent==None):
+#         print("no parents")
+#         if (result[0] == 1):
+#             print(1)
+#             game.winnerID = game.team1ID   
+#         elif(result[0]== 0):
+#             print(2)
+#             game.winnerID = game.team2ID        
+#     elif (game==game.parent.left):
+#         print('left')
+#         if (result[0] == 1):
+#             print(1)
+#             game.winnerID = game.team1ID
+#             game.parent.team1Seed = game.team1Seed    
+#             game.parent.team1ID = game.team1ID  
+#         elif(result[0]== 0):
+#             print(2)
+#             game.winnerID = game.team2ID        
+#             game.parent.team1Seed = game.team2Seed
+#             game.parent.team1ID = game.team2ID
+#     elif (game==game.parent.right):
+#         print('right')
+#         if (result[0] == 1):
+#             print(3)
+#             game.winnerID = game.team2ID
+#             game.parent.team2Seed = game.team1Seed
+#             game.parent.team2ID = game.team1ID
+#         elif(result[0]== 0):
+#             print(4)
+#             game.winnerID = game.team1ID
+#             game.parent.team2Seed = game.team2Seed
+#             game.parent.team2ID = game.team2ID
+#     else:
+#         print("no parents :(")
 
 tourn.reverseLevelOrder()
 # for game in tourn.nodeList:
@@ -273,28 +348,25 @@ def bintree_level(node, levels, x, y, width, side):
     if side=='left':
         xl = x - depth_dist
         xr = x - depth_dist
+        textPosition = "top left"
     elif side=='right':
         xl = x + depth_dist
         xr = x + depth_dist
+        textPosition = "top right"
 
     yr = y + width / 2
     yl = y - width / 2
-
     
-#     print('x')
-#     yr = y 
-#     segments.append([[x, y], [xl, y]])
-#     segments.append([[x, y], [xr, y]])
-    
+    # print team1 
     fig.add_trace(go.Scatter(
     x=[x, xl],
     y=[yl, yl],
     mode="lines+text",
     line_color="black",
     name="Lines and Text",
-    text=[node.team1Name],
+    text=[node.value + " " + str(node.winPct) + " " + node.team1.getString()],
 #     text
-    textposition="top left",
+    textposition=textPosition,
     textfont=dict(
         family="sans serif",
         size=18,
@@ -303,15 +375,15 @@ def bintree_level(node, levels, x, y, width, side):
     )
     )
     
-#     print("a")
+    # print team2
     fig.add_trace(go.Scatter(
     x=[x, xr],
     y=[yr, yr],
     mode="lines+text",
     line_color="black",
     name="Lines and Text",
-    textposition="top left",
-    text=[node.team2Name],
+    textposition=textPosition,
+    text=[node.value + " " + str(node.winPct) + " " + node.team2.getString()],
 #     text=['team2'],
     textfont=dict(
         family="sans serif",
@@ -321,6 +393,7 @@ def bintree_level(node, levels, x, y, width, side):
     )
     )
     
+    # print line connecting team1 and team 2
     fig.add_trace(go.Scatter(
     x=[x,x],
     y=[yl, yr],
@@ -328,37 +401,80 @@ def bintree_level(node, levels, x, y, width, side):
     line_color="black",
     ))
     
+    #recursively call this function
     if levels > 2:
-#         j = j+1
+        print(levels)
         bintree_level(node.left, levels - 1, xl, yl, width / 2, side)
         bintree_level(node.right, levels - 1, xr, yr, width  / 2, side)
         
+    # recursion base condition
     if levels == 1:
         print("yes")
 
+
         #print final
-fig.add_trace(go.Scatter(
-    x=[0,0+width_dist],
-    y=[0, 0],
-    mode="lines+text",
-    line_color="black",
-    name="Lines and Text",
-    text=[tourn.root.winnerID],
-#     text
-    textposition="top right",
-    textfont=dict(
-        family="sans serif",
-        size=18,
-        color="black"
-    )    
-    )
-    )       
+    
 
 j = 0
 node1 = tourn.root.left
 node2 = tourn.root.right
 bintree_level(node1,levels,-10,0,width_dist,'left')
 bintree_level(node2,levels,10,0,width_dist,'right')
+
+print('ready for final')
+#final right
+fig.add_trace(go.Scatter(
+x=[0, 10],
+y=[-4, -4],
+mode="lines+text",
+line_color="black",
+name="Lines and Text",
+text=[tourn.root.left.value, tourn.root.team1.getString()],
+#     text
+textposition="top right",
+textfont=dict(
+    family="sans serif",
+    size=18,
+    color="black"
+)    
+)
+)  
+
+#final left
+fig.add_trace(go.Scatter(
+x=[-10, 0],
+y=[4, 4],
+mode="lines+text",
+line_color="black",
+name="Lines and Text",
+text=[tourn.root.right.value, tourn.root.team2.getString()],
+#     text
+textposition="top left",
+textfont=dict(
+    family="sans serif",
+    size=18,
+    color="black"
+)    
+)
+) 
+
+fig.add_trace(go.Scatter(
+x=[-8, 8],
+y=[0, 0],
+mode="lines+text",
+line_color="black",
+name="Lines and Text",
+text=[tourn.root.winner.getString()],
+#     text
+textposition="top right",
+textfont=dict(
+    family="sans serif",
+    size=18,
+    color="black"
+)    
+)
+) 
+
 fig.update_layout(paper_bgcolor="grey", plot_bgcolor="white")
 fig.show()
 # fig = go.Figure()

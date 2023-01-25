@@ -28,3 +28,6 @@ def test_setup(setup):
 
 def test_reverseLevelOrder(setup):
     setup.reverseLevelOrder() == []
+
+def test_getMatchPrediction(setup):
+    pass

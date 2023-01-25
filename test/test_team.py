@@ -1,9 +1,11 @@
 import pytest
-from src import team
+from src.team import Team
 
-def test_square():
-   num = 7
-   assert 7*7 == 49
+@pytest.fixture
+def setup():
 
-def test_equality():
-   assert 10 == 10
+    mTeam = Team('W13',1123,'RHIT')
+    yield mTeam
+
+def test_getID(setup):
+   assert(setup.getID,1123)
