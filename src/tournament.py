@@ -75,14 +75,13 @@ class Tournament:
                 
     def flatten(self):
         pass
-    
+
     def populatePredictionsList(self, df_stage1Combinations):
         self.predictionsList = []
         for index, row in df_stage1Combinations.iterrows():
             self.predictionsList.append(MatchPrediction(row['ID'], row['Pred']))
-            
-    def getMatchPrediction(self, team1ID, team2ID):
-        
+    
+    def getMatchPrediction(self, team1ID, team2ID):        
         gameID1 = '2022_' + str(int(team1ID))+ '_' +str((team2ID))
         gameID2 = '2022_' + str(int(team2ID))+ '_' +str(int(team1ID))    
         print("teamID",gameID1)

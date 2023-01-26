@@ -16,17 +16,23 @@ import os
 app = Dash(__name__)
 cwd = os.getcwd()
 
-df = pd.read_csv('training_set.csv')
-df_corr = df.corr()
+df_training_set = pd.read_csv('training_set.csv')
+df_training_set_stage2 = pd.read_csv("training_set_stage2.csv")
+df_corr = df_training_set.corr()
 cols = ['deltaSeed', 'deltaWinPct', 'deltaPointsFor', 'deltaFGM', 'deltaAst', 'deltaBlk']
 # X = df[cols]
-y = df['Result']
+y = df_training_set['Result']
 testModelType = 'nope'
 
 df_stage1Combinations = pd.read_csv(cwd+"\\data_stage2\\MSampleSubmissionStage2.csv")
 
 predictionsList = []
-        
+
+
+## from jupyter
+# 
+
+##      
 for index, row in df_stage1Combinations.iterrows():
     predictionsList.append(MatchPrediction(row['ID'], row['Pred']))
 
@@ -559,17 +565,21 @@ app.layout = html.Div([
     html.H2("Explore"),
     html.Div([       
         dcc.Graph(
-            id='example-graph',
+            id='examplegraph',
             figure=fig1
         ),
     ], style={'width': '25%', 'display': 'inline-block', 'vertical-align': 'middle'}),
-
+    html.Div([       
+        dcc.Graph(
+            id='heatmap',
+        ),
+    ], style={'width': '25%', 'display': 'inline-block', 'vertical-align': 'middle'}),
     #model creation 
     #Features
     html.Div([
         html.H2("Build"),
         html.Div([
-            dcc.Dropdown(df.columns[4:], multi=True, id='i-model-features'),
+            dcc.Dropdown(df_training_set.columns[4:], multi=True, id='i-model-features'),
         ]),
         html.Br(),
         html.Div([
@@ -577,11 +587,11 @@ app.layout = html.Div([
         ]),
         html.Div([
             dcc.RangeSlider(
-                df['Season'].min(),
-                df['Season'].max(),
+                df_training_set['Season'].min(),
+                df_training_set['Season'].max(),
                 step=None,
-                value=[df['Season'].min(), df['Season'].max()],
-                marks={str(Season): str(Season) for Season in df['Season'].unique()},
+                value=[df_training_set['Season'].min(), df_training_set['Season'].max()],
+                marks={str(Season): str(Season) for Season in df_training_set['Season'].unique()},
                 id='i-season-range'
         )
     ]),
@@ -601,7 +611,11 @@ app.layout = html.Div([
     dcc.Graph(
         id='predicted-bracket',
         figure=fig
+    ),
+    dcc.Graph(
+        id='predicted-bracket2'
     )
+
     
 ])
 
@@ -612,6 +626,8 @@ app.layout = html.Div([
     Output('output-container-range-slider', 'children'),
     Output('output2', 'children'),
     Output('output3', 'children'),
+    Output('heatmap', 'figure'),
+    Output('predicted-bracket2','figure'),
     Input('i-season-range', 'value'),
     Input('i-model-type', 'value'),
     Input('i-model-features','value'))
@@ -620,18 +636,37 @@ def update_output(value, modelType, modelFeatures):
     cols = modelFeatures
     df_modelResults = pd.DataFrame(columns=['Season','Error','Accuracy'])
     # Linear
+    fig2 = go.Figure()
+    fig3 = go.Figure()
+    df_corr = df_training_set[(df_training_set['Season']>=value[0]) & (df_training_set['Season']<=value[1])].corr()
+    fig2.add_trace(
+    go.Heatmap(
+        x = ['Result'],
+        y = df_corr.index,
+        z = np.array(df_corr),
+        text=df_corr.values,
+        texttemplate='%{text:.2f}'
+    )
+)   
     if modelType == 'Linear':
         testModelType = 'yes thats it'
-        X = df[cols][(df['Season']>=value[0]) & (df['Season']<=value[1])]
-        y = df['Result'][(df['Season']>=value[0]) & (df['Season']<=value[1])]
+        X = df_training_set[cols][(df_training_set['Season']>=value[0]) & (df_training_set['Season']<=value[1])]
+        y = df_training_set['Result'][(df_training_set['Season']>=value[0]) & (df_training_set['Season']<=value[1])]
         linearModel = linear_model.LinearRegression()
         linearModel.fit(X,y)
         a = linearModel.score(X,y)
+        #generate preditions list
+        
+        X_pred = df_training_set_stage2[cols]
+        pred = linearModel.predict(X_pred)
+        df_stage1Combinations['Pred'] = np.round(pred,2)
+        tourn.populatePredictionsList(df_stage1Combinations)
 
+        #test the model
         for year in range(value[0],value[1]):
             if year != 2020:
-                X_test = df[df['Season'] == year][cols]
-                y_test = df[df['Season'] == year]['Result']
+                X_test = df_training_set[df_training_set['Season'] == year][cols]
+                y_test = df_training_set[df_training_set['Season'] == year]['Result']
 
                 df_results = X_test
                 df_results['Prediction'] = linearModel.predict(X_test)
@@ -649,7 +684,202 @@ def update_output(value, modelType, modelFeatures):
                 print(data)
                 
                 df_modelResults = df_modelResults.append(data, ignore_index=True)
+
+        tourn.populatePredictionsList(df_stage1Combinations)
+
+        for game in tourn.nodeList:
+            print("game:", game.value, game.team1, game.team2)
+        #     print("parent",game.parent)
+        #     print(game.value, game.team1ID, game.team2ID)
+            result = tourn.getMatchPrediction(int(game.team1.teamID),int(game.team2.teamID))
+            print("result: ",result[0], "chance:", result[1])
+            game.winPct = result[1]
+            if(game.parent==None):
+                print("no parents")
+                if (result[0] == 1):
+                    print(1)
+                    game.winner = game.team1  
+                elif(result[0]== 0):
+                    print(2)
+                    game.winner = game.team2        
+            elif (game==game.parent.left):
+                print('left')
+                if (result[0] == 1):
+                    print(1)
+                    game.winner = game.team1
+                    game.parent.team1 = game.team1   
+
+                elif(result[0]== 0):
+                    print(2)
+                    game.winner = game.team2       
+                    game.parent.team1 = game.team2
+
+            elif (game==game.parent.right):
+                print('right')
+                if (result[0] == 1):
+                    print(3)
+                    game.winner = game.team2
+                    game.parent.team2 = game.team1
+
+                elif(result[0]== 0):
+                    print(4)
+                    game.winner = game.team1
+                    game.parent.team2 = game.team2
+
+            else:
+                print("no parents :(")
+
+        tourn.reverseLevelOrder()
+
+        
+        fig3.update_layout(width=1600, height=1000)
+
+        tourn.reverseLevelOrder()
+        gamesList = tourn.nodeList.copy()
+
+## pre round
+
+
+        width_dist = 10
+        depth_dist = 10
+        levels = 6
+
+
+        def bintree_level(node, levels, x, y, width, side):
+            segments = []
+            if side=='left':
+                xl = x - depth_dist
+                xr = x - depth_dist
+                textPosition = "top left"
+            elif side=='right':
+                xl = x + depth_dist
+                xr = x + depth_dist
+                textPosition = "top right"
+
+            yr = y + width / 2
+            yl = y - width / 2
             
+            # print team1 
+            fig3.add_trace(go.Scatter(
+            x=[x, xl],
+            y=[yl, yl],
+            mode="lines+text",
+            line_color="black",
+            name="Lines and Text",
+            text=[node.value + " " + str(node.winPct) + " " + node.team1.getString()],
+        #     text
+            textposition=textPosition,
+            textfont=dict(
+                family="sans serif",
+                size=10,
+                color="black"
+            )    
+            )
+            )
+            
+            # print team2
+            fig3.add_trace(go.Scatter(
+            x=[x, xr],
+            y=[yr, yr],
+            mode="lines+text",
+            line_color="black",
+            name="Lines and Text",
+            textposition=textPosition,
+            text=[node.value + " " + str(node.winPct) + " " + node.team2.getString()],
+        #     text=['team2'],
+            textfont=dict(
+                family="sans serif",
+                size=10,
+                color="black"
+            )
+            )
+            )
+            
+            # print line connecting team1 and team 2
+            fig3.add_trace(go.Scatter(
+            x=[x,x],
+            y=[yl, yr],
+            mode="lines",
+            line_color="black",
+            ))
+            
+            #recursively call this function
+            if levels > 2:
+                print(levels)
+                bintree_level(node.left, levels - 1, xl, yl, width / 2, side)
+                bintree_level(node.right, levels - 1, xr, yr, width  / 2, side)
+                
+            # recursion base condition
+            if levels == 1:
+                print("yes")
+
+
+                #print final
+            
+
+        j = 0
+        node1 = tourn.root.left
+        node2 = tourn.root.right
+        bintree_level(node1,levels,-10,0,width_dist,'left')
+        bintree_level(node2,levels,10,0,width_dist,'right')
+
+        print('ready for final')
+        #final right
+        fig3.add_trace(go.Scatter(
+        x=[0, 10],
+        y=[-4, -4],
+        mode="lines+text",
+        line_color="black",
+        name="Lines and Text",
+        text=[tourn.root.left.value, tourn.root.team1.getString()],
+        #     text
+        textposition="top right",
+        textfont=dict(
+            family="sans serif",
+            size=18,
+            color="black"
+        )    
+        )
+        )  
+
+        #final left
+        fig3.add_trace(go.Scatter(
+        x=[-10, 0],
+        y=[4, 4],
+        mode="lines+text",
+        line_color="black",
+        name="Lines and Text",
+        text=[tourn.root.right.value, tourn.root.team2.getString()],
+        #     text
+        textposition="top left",
+        textfont=dict(
+            family="sans serif",
+            size=18,
+            color="black"
+        )    
+        )
+        ) 
+
+        fig3.add_trace(go.Scatter(
+        x=[-8, 8],
+        y=[0, 0],
+        mode="lines+text",
+        line_color="black",
+        name="Lines and Text",
+        text=[tourn.root.winner.getString()],
+        #     text
+        textposition="top right",
+        textfont=dict(
+            family="sans serif",
+            size=18,
+            color="black"
+        )    
+        )
+        ) 
+# paper_bgcolor="grey"
+        fig3.update_layout(plot_bgcolor="white", showlegend=False)
+        fig3.update_xaxes(showticklabels=False)
+        fig3.update_yaxes(showticklabels=False)            
     # Logistic
     # Random Tree
     # Random Forest
@@ -664,7 +894,7 @@ def update_output(value, modelType, modelFeatures):
         data=df_modelResults.to_dict('records'), 
         columns=[{"name": i, "id": i} for i in df_modelResults.columns]
     )
-    return 'You have selected "{}"'.format(a), testModelType, returnTable
+    return 'You have selected "{}"'.format(a), testModelType, returnTable, fig2, fig3
 
 if __name__ == '__main__':
     app.run_server(debug=True)
