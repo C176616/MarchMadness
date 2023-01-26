@@ -73,7 +73,9 @@ class Tournament:
     #             if b.empty != True:
     #                 game.team2Name = b['TeamName'].values[0]
                 
-
+    def flatten(self):
+        pass
+    
     def populatePredictionsList(self, df_stage1Combinations):
         self.predictionsList = []
         for index, row in df_stage1Combinations.iterrows():
