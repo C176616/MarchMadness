@@ -57,9 +57,10 @@ fig1.add_trace(
         y = df_corr.index,
         z = np.array(df_corr),
         text=df_corr.values,
-        texttemplate='%{text:.2f}'
+        texttemplate='%{text:.2f}',
     )
 )
+# fig1.update_layout(titlewidth=400, height=1000, yaxis_nticks=len(df_corr))
 
 ############### from Forge
 import plotly.express as px
@@ -467,54 +468,69 @@ fig.update_layout(paper_bgcolor="grey", plot_bgcolor="white")
 app.layout = html.Div([
     html.H1("March Madness Machine Learning"),
     # Heatmap Graph
-    html.H2("Explore"),
-    html.Div([       
-        dcc.Graph(
-            id='heatmap',
-        ),
-    ], style={'width': '25%', 'display': 'inline-block', 'vertical-align': 'middle'}),
-
     html.Div([
-        dcc.RangeSlider(
-            df_training_set['Season'].min(),
-            df_training_set['Season'].max(),
-            step=None,
-            value=[df_training_set['Season'].min(), df_training_set['Season'].max()],
-            marks={str(Season): str(Season) for Season in df_training_set['Season'].unique()},
-            id='i-season-range'
-        )
-    ], style={'width': '25%', 'display': 'inline-block', 'vertical-align': 'middle'}),
+        html.H2("Explore"),
+            html.Div([       
+                dcc.Graph(
+                    id='heatmap',
+                ),
+            ], style={'width': '50%', 'vertical-align': 'middle', 'display': 'inline-block'}),
 
-    #model creation 
+            html.Div([
+                html.H3("Tournament Seasons to Include in Data:"),
+                dcc.RangeSlider(
+                    df_training_set['Season'].min(),
+                    df_training_set['Season'].max(),
+                    step=None,
+                    value=[df_training_set['Season'].min(), df_training_set['Season'].max()],
+                    marks={str(Season): str(Season) for Season in df_training_set['Season'].unique()},
+                    id='i-season-range'            
+                )
+            ], style={'width': '100%', 'horizontal-align': 'middle'}),
 
-    #Features
+    ], style={'width': '30%', 'display':'inline-block'}),
+    
+
+
     html.Div([
         html.H2("Build"),
         html.Div([
-            dcc.Dropdown(df_training_set.columns[4:], multi=True, id='i-model-features'),
+            dcc.Dropdown(df_training_set.columns[4:], multi=True, id='i-model-features', placeholder="Select Features to Include"),
         ]),
         html.Br(),
         html.Div([
             dcc.RadioItems(['Linear', 'Logistic', 'Random Tree', 'Random Forest', 'Neural Net'], 'Random Forest', id='i-model-type'),
         ]),
 
-    ],style={'width': '25%', 'vertical-align': 'middle'}),   
+    ],style={'width': '30%', 'display':'inline-block', 'vertical-align':'top'}),   
+
+    #model creation 
+
+    #Features
+    
 
     html.Div([
         html.H2("Test"),
-        dcc.Slider(min=0,max=100,step=10, id='split-slider', value=70, marks=None, tooltip={"placement": "bottom", "always_visible": True})
-    ]),
+        html.H3("Train/Test Split (%)"),
+        dcc.Slider(min=0,max=100,step=10, id='split-slider', value=70, marks=None, tooltip={"placement": "bottom", "always_visible": True}),
+        html.Div(id='results-table'),
+        
+    ],style={'width': '33%', 'display':'inline-block', 'vertical-align':'top'}),
+    
 
-    html.Div(id='results-table'),
     html.Div([
-        html.H2("Predict")
-    ]),
-    html.Div([
-        dcc.Graph(
-            id='predicted-bracket'
-        )
-    ])  
-])
+        html.H2("Predict"),
+        html.Div([
+            dcc.Graph(
+                id='predicted-bracket'
+            )
+        ])  
+        ],style={'width': '100%', 'display':'inline-block', 'vertical-align':'top'})
+    ])
+
+
+
+
 
 @app.callback(
     Output('heatmap', 'figure'),
@@ -538,8 +554,9 @@ def update_output(value, modelType, modelFeatures):
         z = np.array(df_corr),
         text=df_corr.values,
         texttemplate='%{text:.2f}'
-    )
-)   
+    ))
+    heatmap_figure.update_layout(height=600,yaxis_nticks=len(df_corr))
+
     if modelType == 'Linear':
         testModelType = 'yes thats it'
         X = df_training_set[cols][(df_training_set['Season']>=value[0]) & (df_training_set['Season']<=value[1])]
