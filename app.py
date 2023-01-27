@@ -14,30 +14,41 @@ from src.tournament import Tournament
 from src.matchPrediction import MatchPrediction
 import os
 
+import plotly.express as px
+import plotly.graph_objects as go
+import pandas as pd
+import os
+import numpy as np
+import plotly.io as pio
+from itertools import cycle
+
+from src.game import Game
+from src.team import Team
+from src.tournament import Tournament
+
+
 
 app = Dash(__name__)
 cwd = os.getcwd()
 
+pio.renderers.deafult = "notebook"
+
+## Import required data
 df_training_set = pd.read_csv('training_set.csv')
 df_training_set_stage2 = pd.read_csv("training_set_stage2.csv")
-df_corr = df_training_set.corr()
-cols = ['deltaSeed', 'deltaWinPct', 'deltaPointsFor', 'deltaFGM', 'deltaAst', 'deltaBlk']
-# X = df[cols]
-y = df_training_set['Result']
-testModelType = 'nope'
-
 df_stage1Combinations = pd.read_csv(cwd+"\\data_stage2\\MSampleSubmissionStage2.csv")
 
-predictionsList = []
-
-
-## from jupyter
-# 
+## Create a correlation matrix for the initial heatmap graph
+df_corr = df_training_set.corr()
+# cols = ['deltaSeed', 'deltaWinPct', 'deltaPointsFor', 'deltaFGM', 'deltaAst', 'deltaBlk']
+# X = df[cols]
+# y = df_training_set['Result']
 
 ##      
-for index, row in df_stage1Combinations.iterrows():
-    predictionsList.append(MatchPrediction(row['ID'], row['Pred']))
+# for index, row in df_stage1Combinations.iterrows():
+#     predictionsList.append(MatchPrediction(row['ID'], row['Pred']))
 
+## Helper functino for generating HTML tables
 def generate_table(dataframe, max_rows=10):
     return html.Table([
         html.Thead(
@@ -50,8 +61,176 @@ def generate_table(dataframe, max_rows=10):
         ])
     ])
 
+def initializeTournament():
+    root = Game('R6CH')
+    root.left = Game('R5WX')
+    root.left.parent = root
+    root.right = Game('R5YZ')
+    root.right.parent = root
+
+    root.left.left = Game('R4W1')
+    root.left.left.parent = root.left
+    root.left.right = Game('R4X1')
+    root.left.right.parent = root.left
+    root.right.left = Game('R4Y1')
+    root.right.left.parent = root.right
+    root.right.right = Game('R4Z1')
+    root.right.right.parent = root.right
+
+    root.left.left.left = Game('R3W1')
+    root.left.left.left.parent = root.left.left
+    root.left.left.right = Game('R3W2')
+    root.left.left.right.parent = root.left.left
+    root.left.right.left = Game('R3X1')
+    root.left.right.left.parent = root.left.right
+    root.left.right.right = Game('R3X2')
+    root.left.right.right.parent = root.left.right
+    root.right.left.left = Game('R3Y1')
+    root.right.left.left.parent = root.right.left
+    root.right.left.right = Game('R3Y2')
+    root.right.left.right.parent = root.right.left
+    root.right.right.left = Game('R3Z1')
+    root.right.right.left.parent = root.right.right
+    root.right.right.right = Game('R3Z2')
+    root.right.right.right.parent = root.right.right
+
+    root.left.left.left.left = Game('R2W1')
+    root.left.left.left.left.parent = root.left.left.left
+    root.left.left.left.right = Game('R2W2')
+    root.left.left.left.right.parent = root.left.left.left
+    root.left.left.right.left = Game('R2W3')
+    root.left.left.right.left.parent = root.left.left.right
+    root.left.left.right.right = Game('R2W4')
+    root.left.left.right.right.parent = root.left.left.right
+
+    root.left.right.left.left = Game('R2X1')
+    root.left.right.left.left.parent = root.left.right.left
+    root.left.right.left.right = Game('R2X2')
+    root.left.right.left.right.parent = root.left.right.left
+    root.left.right.right.left = Game('R2X3')
+    root.left.right.right.left.parent = root.left.right.right
+    root.left.right.right.right = Game('R2X4')
+    root.left.right.right.right.parent = root.left.right.right
+
+    root.right.left.left.left = Game('R2Y1')
+    root.right.left.left.left.parent = root.right.left.left
+    root.right.left.left.right = Game('R2Y2')
+    root.right.left.left.right.parent = root.right.left.left
+    root.right.left.right.left = Game('R2Y3')
+    root.right.left.right.left.parent = root.right.left.right
+    root.right.left.right.right = Game('R2Y4')
+    root.right.left.right.right.parent = root.right.left.right
+
+    root.right.right.left.left = Game('R2Z1')
+    root.right.right.left.left.parent = root.right.right.left
+    root.right.right.left.right = Game('R2Z2')
+    root.right.right.left.right.parent = root.right.right.left
+    root.right.right.right.left = Game('R2Z3')
+    root.right.right.right.left.parent = root.right.right.right
+    root.right.right.right.right = Game('R2Z4')
+    root.right.right.right.right.parent = root.right.right.right
+
+    root.left.left.left.left.left = Game('R1W1')
+    root.left.left.left.left.left.parent = root.left.left.left.left
+    root.left.left.left.left.right = Game('R1W2')
+    root.left.left.left.left.right.parent = root.left.left.left.left
+    root.left.left.left.right.left = Game('R1W3')
+    root.left.left.left.right.left.parent = root.left.left.left.right
+    root.left.left.left.right.right = Game('R1W4')
+    root.left.left.left.right.right.parent = root.left.left.left.right
+    root.left.left.right.left.left = Game('R1W5')
+    root.left.left.right.left.left.parent = root.left.left.right.left
+    root.left.left.right.left.right = Game('R1W6')
+    root.left.left.right.left.right.parent = root.left.left.right.left
+    root.left.left.right.right.left = Game('R1W7')
+    root.left.left.right.right.left.parent = root.left.left.right.right
+    root.left.left.right.right.right = Game('R1W8')
+    root.left.left.right.right.right.parent = root.left.left.right.right
+
+    root.left.right.left.left.left = Game('R1X1')
+    root.left.right.left.left.left.parent = root.left.right.left.left
+    root.left.right.left.left.right = Game('R1X2')
+    root.left.right.left.left.right.parent = root.left.right.left.left
+    root.left.right.left.right.left = Game('R1X3')
+    root.left.right.left.right.left.parent = root.left.right.left.right
+    root.left.right.left.right.right= Game('R1X4')
+    root.left.right.left.right.right.parent = root.left.right.left.right
+    root.left.right.right.left.left = Game('R1X5')
+    root.left.right.right.left.left.parent = root.left.right.right.left
+    root.left.right.right.left.right= Game('R1X6')
+    root.left.right.right.left.right.parent = root.left.right.right.left
+    root.left.right.right.right.left = Game('R1X7')
+    root.left.right.right.right.left.parent = root.left.right.right.right
+    root.left.right.right.right.right = Game('R1X8')
+    root.left.right.right.right.right.parent = root.left.right.right.right
+
+    root.right.left.left.left.left = Game('R1Y1')
+    root.right.left.left.left.left.parent = root.right.left.left.left
+    root.right.left.left.left.right = Game('R1Y2')
+    root.right.left.left.left.right.parent = root.right.left.left.left
+    root.right.left.left.right.left = Game('R1Y3')
+    root.right.left.left.right.left.parent = root.right.left.left.right
+    root.right.left.left.right.right = Game('R1Y4')
+    root.right.left.left.right.right.parent = root.right.left.left.right
+    root.right.left.right.left.left = Game('R1Y5')
+    root.right.left.right.left.left.parent = root.right.left.right.left
+    root.right.left.right.left.right = Game('R1Y6')
+    root.right.left.right.left.right.parent = root.right.left.right.left
+    root.right.left.right.right.left = Game('R1Y7')
+    root.right.left.right.right.left.parent = root.right.left.right.right
+    root.right.left.right.right.right = Game('R1Y8')
+    root.right.left.right.right.right.parent = root.right.left.right.right
+
+    root.right.right.left.left.left = Game('R1Z1')
+    root.right.right.left.left.left.parent = root.right.right.left.left
+    root.right.right.left.left.right = Game('R1Z2')
+    root.right.right.left.left.right.parent = root.right.right.left.left
+    root.right.right.left.right.left = Game('R1X3')
+    root.right.right.left.right.left.parent = root.right.right.left.right
+    root.right.right.left.right.right = Game('R1Z4')
+    root.right.right.left.right.right.parent = root.right.right.left.right
+    root.right.right.right.left.left = Game('R1Z5')
+    root.right.right.right.left.left.parent = root.right.right.right.left
+    root.right.right.right.left.right = Game('R1Z6')
+    root.right.right.right.left.right.parent = root.right.right.right.left
+    root.right.right.right.right.left = Game('R1Z7')
+    root.right.right.right.right.left.parent = root.right.right.right.right
+    root.right.right.right.right.right = Game('R1Z8')
+    root.right.right.right.right.right.parent = root.right.right.right.right
+
+    tourn = Tournament(root)   
+    tourn.reverseLevelOrder()
+
+    tourn.getNode('R1W5').right = Game('W12')
+    tourn.getNode('R1W5').right.parent = tourn.getNode('R1W5')
+    tourn.getNode('R1X6').right = Game('X11')
+    tourn.getNode('R1X6').right.parent = tourn.getNode('R1X6')
+    tourn.getNode('R1Y1').right = Game('Y16')
+    tourn.getNode('R1Y1').right.parent = tourn.getNode('R1Y1')
+    tourn.getNode('R1Z1').right = Game('Z16')
+    tourn.getNode('R1Z1').right.parent = tourn.getNode('R1Z1')
+
+    tourn.reverseLevelOrder()
+
+    preRound1Slots = ['W12','X11','Y16','Z16']
+    cycleList = cycle(preRound1Slots)
+
+    for x in range(3):
+        i = next(cycleList)
+        slot = df_info[df_info['Slot']==i]
+        tourn.getNode(i).team1 = Team(slot['StrongSeed'].values[0],slot['Team1ID'].values[0],slot['Team1Name'].values[0])
+        tourn.getNode(i).team2 = Team(slot['WeakSeed'].values[0],slot['Team2ID'].values[0],slot['Team2Name'].values[0])
+
+    tourn.populateTeams(df_info)
+
+    tourn.populatePredictionsList(df_stage1Combinations)
+    tourn.simulateTournament()
+
+    return tourn
 # fig = px.bar(df, x="deltaFGM", y="deltaBlk", barmode="group")
 # fig = sns.heatmap(correlation, vmax=.8, square=True)
+
+## Create the initial heatmap figure
 fig1 = go.Figure()
 fig1.add_trace(
     go.Heatmap(
@@ -65,20 +244,9 @@ fig1.add_trace(
 # fig1.update_layout(titlewidth=400, height=1000, yaxis_nticks=len(df_corr))
 
 ############### from Forge
-import plotly.express as px
-import plotly.graph_objects as go
-import pandas as pd
-import os
-import numpy as np
-import plotly.io as pio
-from itertools import cycle
 
-from src.game import Game
-from src.team import Team
-from src.tournament import Tournament
 # from src import tournament
 
-pio.renderers.deafult = "notebook"
 
 cwd = os.getcwd()
 
@@ -106,217 +274,10 @@ df_comb3 = df_comb2.merge(df_comb, how='left',left_on="WeakSeed", right_on="Seed
 df_info = df_comb3.rename(columns={'TeamID':'Team2ID', 'TeamName':'Team2Name'})
 
 print(df_info)
-
+tourn = initializeTournament()
 
 ## Initialize the tournament structure
 
-root = Game('R6CH')
-root.left = Game('R5WX')
-root.left.parent = root
-root.right = Game('R5YZ')
-root.right.parent = root
-
-root.left.left = Game('R4W1')
-root.left.left.parent = root.left
-root.left.right = Game('R4X1')
-root.left.right.parent = root.left
-root.right.left = Game('R4Y1')
-root.right.left.parent = root.right
-root.right.right = Game('R4Z1')
-root.right.right.parent = root.right
-
-root.left.left.left = Game('R3W1')
-root.left.left.left.parent = root.left.left
-root.left.left.right = Game('R3W2')
-root.left.left.right.parent = root.left.left
-root.left.right.left = Game('R3X1')
-root.left.right.left.parent = root.left.right
-root.left.right.right = Game('R3X2')
-root.left.right.right.parent = root.left.right
-root.right.left.left = Game('R3Y1')
-root.right.left.left.parent = root.right.left
-root.right.left.right = Game('R3Y2')
-root.right.left.right.parent = root.right.left
-root.right.right.left = Game('R3Z1')
-root.right.right.left.parent = root.right.right
-root.right.right.right = Game('R3Z2')
-root.right.right.right.parent = root.right.right
-
-root.left.left.left.left = Game('R2W1')
-root.left.left.left.left.parent = root.left.left.left
-root.left.left.left.right = Game('R2W2')
-root.left.left.left.right.parent = root.left.left.left
-root.left.left.right.left = Game('R2W3')
-root.left.left.right.left.parent = root.left.left.right
-root.left.left.right.right = Game('R2W4')
-root.left.left.right.right.parent = root.left.left.right
-
-root.left.right.left.left = Game('R2X1')
-root.left.right.left.left.parent = root.left.right.left
-root.left.right.left.right = Game('R2X2')
-root.left.right.left.right.parent = root.left.right.left
-root.left.right.right.left = Game('R2X3')
-root.left.right.right.left.parent = root.left.right.right
-root.left.right.right.right = Game('R2X4')
-root.left.right.right.right.parent = root.left.right.right
-
-root.right.left.left.left = Game('R2Y1')
-root.right.left.left.left.parent = root.right.left.left
-root.right.left.left.right = Game('R2Y2')
-root.right.left.left.right.parent = root.right.left.left
-root.right.left.right.left = Game('R2Y3')
-root.right.left.right.left.parent = root.right.left.right
-root.right.left.right.right = Game('R2Y4')
-root.right.left.right.right.parent = root.right.left.right
-
-root.right.right.left.left = Game('R2Z1')
-root.right.right.left.left.parent = root.right.right.left
-root.right.right.left.right = Game('R2Z2')
-root.right.right.left.right.parent = root.right.right.left
-root.right.right.right.left = Game('R2Z3')
-root.right.right.right.left.parent = root.right.right.right
-root.right.right.right.right = Game('R2Z4')
-root.right.right.right.right.parent = root.right.right.right
-
-root.left.left.left.left.left = Game('R1W1')
-root.left.left.left.left.left.parent = root.left.left.left.left
-root.left.left.left.left.right = Game('R1W2')
-root.left.left.left.left.right.parent = root.left.left.left.left
-root.left.left.left.right.left = Game('R1W3')
-root.left.left.left.right.left.parent = root.left.left.left.right
-root.left.left.left.right.right = Game('R1W4')
-root.left.left.left.right.right.parent = root.left.left.left.right
-root.left.left.right.left.left = Game('R1W5')
-root.left.left.right.left.left.parent = root.left.left.right.left
-root.left.left.right.left.right = Game('R1W6')
-root.left.left.right.left.right.parent = root.left.left.right.left
-root.left.left.right.right.left = Game('R1W7')
-root.left.left.right.right.left.parent = root.left.left.right.right
-root.left.left.right.right.right = Game('R1W8')
-root.left.left.right.right.right.parent = root.left.left.right.right
-
-root.left.right.left.left.left = Game('R1X1')
-root.left.right.left.left.left.parent = root.left.right.left.left
-root.left.right.left.left.right = Game('R1X2')
-root.left.right.left.left.right.parent = root.left.right.left.left
-root.left.right.left.right.left = Game('R1X3')
-root.left.right.left.right.left.parent = root.left.right.left.right
-root.left.right.left.right.right= Game('R1X4')
-root.left.right.left.right.right.parent = root.left.right.left.right
-root.left.right.right.left.left = Game('R1X5')
-root.left.right.right.left.left.parent = root.left.right.right.left
-root.left.right.right.left.right= Game('R1X6')
-root.left.right.right.left.right.parent = root.left.right.right.left
-root.left.right.right.right.left = Game('R1X7')
-root.left.right.right.right.left.parent = root.left.right.right.right
-root.left.right.right.right.right = Game('R1X8')
-root.left.right.right.right.right.parent = root.left.right.right.right
-
-root.right.left.left.left.left = Game('R1Y1')
-root.right.left.left.left.left.parent = root.right.left.left.left
-root.right.left.left.left.right = Game('R1Y2')
-root.right.left.left.left.right.parent = root.right.left.left.left
-root.right.left.left.right.left = Game('R1Y3')
-root.right.left.left.right.left.parent = root.right.left.left.right
-root.right.left.left.right.right = Game('R1Y4')
-root.right.left.left.right.right.parent = root.right.left.left.right
-root.right.left.right.left.left = Game('R1Y5')
-root.right.left.right.left.left.parent = root.right.left.right.left
-root.right.left.right.left.right = Game('R1Y6')
-root.right.left.right.left.right.parent = root.right.left.right.left
-root.right.left.right.right.left = Game('R1Y7')
-root.right.left.right.right.left.parent = root.right.left.right.right
-root.right.left.right.right.right = Game('R1Y8')
-root.right.left.right.right.right.parent = root.right.left.right.right
-
-root.right.right.left.left.left = Game('R1Z1')
-root.right.right.left.left.left.parent = root.right.right.left.left
-root.right.right.left.left.right = Game('R1Z2')
-root.right.right.left.left.right.parent = root.right.right.left.left
-root.right.right.left.right.left = Game('R1X3')
-root.right.right.left.right.left.parent = root.right.right.left.right
-root.right.right.left.right.right = Game('R1Z4')
-root.right.right.left.right.right.parent = root.right.right.left.right
-root.right.right.right.left.left = Game('R1Z5')
-root.right.right.right.left.left.parent = root.right.right.right.left
-root.right.right.right.left.right = Game('R1Z6')
-root.right.right.right.left.right.parent = root.right.right.right.left
-root.right.right.right.right.left = Game('R1Z7')
-root.right.right.right.right.left.parent = root.right.right.right.right
-root.right.right.right.right.right = Game('R1Z8')
-root.right.right.right.right.right.parent = root.right.right.right.right
-
-tourn = Tournament(root)   
-tourn.reverseLevelOrder()
-
-tourn.getNode('R1W5').right = Game('W12')
-tourn.getNode('R1W5').right.parent = tourn.getNode('R1W5')
-tourn.getNode('R1X6').right = Game('X11')
-tourn.getNode('R1X6').right.parent = tourn.getNode('R1X6')
-tourn.getNode('R1Y1').right = Game('Y16')
-tourn.getNode('R1Y1').right.parent = tourn.getNode('R1Y1')
-tourn.getNode('R1Z1').right = Game('Z16')
-tourn.getNode('R1Z1').right.parent = tourn.getNode('R1Z1')
-
-tourn.reverseLevelOrder()
-
-preRound1Slots = ['W12','X11','Y16','Z16']
-cycleList = cycle(preRound1Slots)
-
-for x in range(3):
-    i = next(cycleList)
-    slot = df_info[df_info['Slot']==i]
-    tourn.getNode(i).team1 = Team(slot['StrongSeed'].values[0],slot['Team1ID'].values[0],slot['Team1Name'].values[0])
-    tourn.getNode(i).team2 = Team(slot['WeakSeed'].values[0],slot['Team2ID'].values[0],slot['Team2Name'].values[0])
-
-tourn.populateTeams(df_info)
-
-tourn.populatePredictionsList(df_stage1Combinations)
-
-for game in tourn.nodeList:
-    print("game:", game.value, game.team1, game.team2)
-#     print("parent",game.parent)
-#     print(game.value, game.team1ID, game.team2ID)
-    result = tourn.getMatchPrediction(int(game.team1.teamID),int(game.team2.teamID))
-    print("result: ",result[0], "chance:", result[1])
-    game.winPct = result[1]
-    if(game.parent==None):
-        print("no parents")
-        if (result[0] == 1):
-            print(1)
-            game.winner = game.team1  
-        elif(result[0]== 0):
-            print(2)
-            game.winner = game.team2        
-    elif (game==game.parent.left):
-        print('left')
-        if (result[0] == 1):
-            print(1)
-            game.winner = game.team1
-            game.parent.team1 = game.team1   
-
-        elif(result[0]== 0):
-            print(2)
-            game.winner = game.team2       
-            game.parent.team1 = game.team2
-
-    elif (game==game.parent.right):
-        print('right')
-        if (result[0] == 1):
-            print(3)
-            game.winner = game.team2
-            game.parent.team2 = game.team1
-
-        elif(result[0]== 0):
-            print(4)
-            game.winner = game.team1
-            game.parent.team2 = game.team2
-
-    else:
-        print("no parents :(")
-
-
-tourn.reverseLevelOrder()
 
 fig = go.Figure()
 fig.update_layout(width=1600, height=1000)
@@ -327,144 +288,142 @@ gamesList = tourn.nodeList.copy()
 ## pre round
 
 
-width_dist = 10
-depth_dist = 10
-levels = 6
+# width_dist = 10
+# depth_dist = 10
+# levels = 6
 
+# def bintree_level(node, levels, x, y, width, side):
+#     if side=='left':
+#         xl = x - depth_dist
+#         xr = x - depth_dist
+#         textPosition = "top left"
+#     elif side=='right':
+#         xl = x + depth_dist
+#         xr = x + depth_dist
+#         textPosition = "top right"
 
-def bintree_level(node, levels, x, y, width, side):
-    segments = []
-    if side=='left':
-        xl = x - depth_dist
-        xr = x - depth_dist
-        textPosition = "top left"
-    elif side=='right':
-        xl = x + depth_dist
-        xr = x + depth_dist
-        textPosition = "top right"
-
-    yr = y + width / 2
-    yl = y - width / 2
+#     yr = y + width / 2
+#     yl = y - width / 2
     
-    # print team1 
-    fig.add_trace(go.Scatter(
-    x=[x, xl],
-    y=[yl, yl],
-    mode="lines+text",
-    line_color="black",
-    name="Lines and Text",
-    text=[node.value + " " + str(node.winPct) + " " + node.team1.getString()],
-#     text
-    textposition=textPosition,
-    textfont=dict(
-        family="sans serif",
-        size=10,
-        color="black"
-    )    
-    )
-    )
+#     # print team1 
+#     fig.add_trace(go.Scatter(
+#     x=[x, xl],
+#     y=[yl, yl],
+#     mode="lines+text",
+#     line_color="black",
+#     name="Lines and Text",
+#     text=[node.value + " " + str(node.winPct) + " " + node.team1.getString()],
+# #     text
+#     textposition=textPosition,
+#     textfont=dict(
+#         family="sans serif",
+#         size=10,
+#         color="black"
+#     )    
+#     )
+#     )
     
-    # print team2
-    fig.add_trace(go.Scatter(
-    x=[x, xr],
-    y=[yr, yr],
-    mode="lines+text",
-    line_color="black",
-    name="Lines and Text",
-    textposition=textPosition,
-    text=[node.value + " " + str(node.winPct) + " " + node.team2.getString()],
-#     text=['team2'],
-    textfont=dict(
-        family="sans serif",
-        size=10,
-        color="black"
-    )
-    )
-    )
+#     # print team2
+#     fig.add_trace(go.Scatter(
+#     x=[x, xr],
+#     y=[yr, yr],
+#     mode="lines+text",
+#     line_color="black",
+#     name="Lines and Text",
+#     textposition=textPosition,
+#     text=[node.value + " " + str(node.winPct) + " " + node.team2.getString()],
+# #     text=['team2'],
+#     textfont=dict(
+#         family="sans serif",
+#         size=10,
+#         color="black"
+#     )
+#     )
+#     )
     
-    # print line connecting team1 and team 2
-    fig.add_trace(go.Scatter(
-    x=[x,x],
-    y=[yl, yr],
-    mode="lines",
-    line_color="black",
-    ))
+#     # print line connecting team1 and team 2
+#     fig.add_trace(go.Scatter(
+#     x=[x,x],
+#     y=[yl, yr],
+#     mode="lines",
+#     line_color="black",
+#     ))
     
-    #recursively call this function
-    if levels > 2:
-        print(levels)
-        bintree_level(node.left, levels - 1, xl, yl, width / 2, side)
-        bintree_level(node.right, levels - 1, xr, yr, width  / 2, side)
+#     #recursively call this function
+#     if levels > 2:
+#         print(levels)
+#         bintree_level(node.left, levels - 1, xl, yl, width / 2, side)
+#         bintree_level(node.right, levels - 1, xr, yr, width  / 2, side)
         
-    # recursion base condition
-    if levels == 1:
-        print("yes")
+#     # recursion base condition
+#     if levels == 1:
+#         print("yes")
 
 
-        #print final
+#         #print final
     
 
-j = 0
-node1 = tourn.root.left
-node2 = tourn.root.right
-bintree_level(node1,levels,-10,0,width_dist,'left')
-bintree_level(node2,levels,10,0,width_dist,'right')
+# j = 0
+# node1 = tourn.root.left
+# node2 = tourn.root.right
+# bintree_level(node1,levels,-10,0,width_dist,'left')
+# bintree_level(node2,levels,10,0,width_dist,'right')
 
-print('ready for final')
-#final right
-fig.add_trace(go.Scatter(
-x=[0, 10],
-y=[-4, -4],
-mode="lines+text",
-line_color="black",
-name="Lines and Text",
-text=[tourn.root.left.value, tourn.root.team1.getString()],
-#     text
-textposition="top right",
-textfont=dict(
-    family="sans serif",
-    size=18,
-    color="black"
-)    
-)
-)  
+# print('ready for final')
+# #final right
+# fig.add_trace(go.Scatter(
+# x=[0, 10],
+# y=[-4, -4],
+# mode="lines+text",
+# line_color="black",
+# name="Lines and Text",
+# text=[tourn.root.left.value, tourn.root.team1.getString()],
+# #     text
+# textposition="top right",
+# textfont=dict(
+#     family="sans serif",
+#     size=18,
+#     color="black"
+# )    
+# )
+# )  
 
-#final left
-fig.add_trace(go.Scatter(
-x=[-10, 0],
-y=[4, 4],
-mode="lines+text",
-line_color="black",
-name="Lines and Text",
-text=[tourn.root.right.value, tourn.root.team2.getString()],
-#     text
-textposition="top left",
-textfont=dict(
-    family="sans serif",
-    size=18,
-    color="black"
-)    
-)
-) 
+# #final left
+# fig.add_trace(go.Scatter(
+# x=[-10, 0],
+# y=[4, 4],
+# mode="lines+text",
+# line_color="black",
+# name="Lines and Text",
+# text=[tourn.root.right.value, tourn.root.team2.getString()],
+# #     text
+# textposition="top left",
+# textfont=dict(
+#     family="sans serif",
+#     size=18,
+#     color="black"
+# )    
+# )
+# ) 
 
-fig.add_trace(go.Scatter(
-x=[-8, 8],
-y=[0, 0],
-mode="lines+text",
-line_color="black",
-name="Lines and Text",
-text=[tourn.root.winner.getString()],
-#     text
-textposition="top right",
-textfont=dict(
-    family="sans serif",
-    size=18,
-    color="black"
-)    
-)
-) 
+# fig.add_trace(go.Scatter(
+# x=[-8, 8],
+# y=[0, 0],
+# mode="lines+text",
+# line_color="black",
+# name="Lines and Text",
+# text=[tourn.root.winner.getString()],
+# #     text
+# textposition="top right",
+# textfont=dict(
+#     family="sans serif",
+#     size=18,
+#     color="black"
+# )    
+# )
+# ) 
 
-fig.update_layout(paper_bgcolor="grey", plot_bgcolor="white")
+# fig.update_layout(paper_bgcolor="grey", plot_bgcolor="white")
 
 #################
 app.layout = html.Div([
@@ -475,6 +434,7 @@ app.layout = html.Div([
             html.Div([       
                 dcc.Graph(
                     id='heatmap',
+                    figure=fig1
                 ),
             ], style={'width': '50%', 'vertical-align': 'middle', 'display': 'inline-block'}),
 
@@ -542,10 +502,8 @@ app.layout = html.Div([
     Input('i-model-type', 'value'),
     Input('i-model-features','value'))    
 def update_output(value, modelType, modelFeatures):
-    a = 0
     cols = modelFeatures
     df_modelResults = pd.DataFrame(columns=['Season','Error','Accuracy'])
-    # Linear
     heatmap_figure = go.Figure()
     bracket_figure = go.Figure()
     df_corr = df_training_set[(df_training_set['Season']>=value[0]) & (df_training_set['Season']<=value[1])].corr()
@@ -666,47 +624,7 @@ def update_output(value, modelType, modelFeatures):
                 
                 df_modelResults = df_modelResults.append(data, ignore_index=True)
 
-    for game in tourn.nodeList:
-        print("game:", game.value, game.team1, game.team2)
-        result = tourn.getMatchPrediction(int(game.team1.teamID),int(game.team2.teamID))
-        print("result: ",result[0], "chance:", result[1])
-        game.winPct = result[1]
-        if(game.parent==None):
-            print("no parents")
-            if (result[0] == 1):
-                print(1)
-                game.winner = game.team1  
-            elif(result[0]== 0):
-                print(2)
-                game.winner = game.team2        
-        elif (game==game.parent.left):
-            print('left')
-            if (result[0] == 1):
-                print(1)
-                game.winner = game.team1
-                game.parent.team1 = game.team1   
 
-            elif(result[0]== 0):
-                print(2)
-                game.winner = game.team2       
-                game.parent.team1 = game.team2
-
-        elif (game==game.parent.right):
-            print('right')
-            if (result[0] == 1):
-                print(3)
-                game.winner = game.team2
-                game.parent.team2 = game.team1
-
-            elif(result[0]== 0):
-                print(4)
-                game.winner = game.team1
-                game.parent.team2 = game.team2
-
-        else:
-            print("no parents :(")
-
-    tourn.reverseLevelOrder()
 
     
     bracket_figure.update_layout(width=1600, height=1000)
@@ -857,18 +775,16 @@ def update_output(value, modelType, modelFeatures):
     bracket_figure.update_layout(plot_bgcolor="white", showlegend=False)
     bracket_figure.update_xaxes(showticklabels=False)
     bracket_figure.update_yaxes(showticklabels=False)            
-    # Logistic
-    # Random Tree
-    # Random Forest
-    # Neural Net
+
 
     
     print(df_modelResults)
-    resultsTable = generate_table(df_modelResults)
+    # resultsTable = generate_table(df_modelResults)
     returnTable = dash_table.DataTable(
         data=df_modelResults.to_dict('records'), 
         columns=[{"name": i, "id": i} for i in df_modelResults.columns]
     )
+
     return heatmap_figure, returnTable, bracket_figure
 
 if __name__ == '__main__':
