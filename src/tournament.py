@@ -84,7 +84,7 @@ class Tournament:
     def getMatchPrediction(self, team1ID, team2ID):        
         gameID1 = '2022_' + str(int(team1ID))+ '_' +str((team2ID))
         gameID2 = '2022_' + str(int(team2ID))+ '_' +str(int(team1ID))    
-        print("teamID",gameID1)
+        # print("teamID",gameID1)
 
         randResult = np.random.random()
 
@@ -109,12 +109,12 @@ class Tournament:
 
     def simulateTournament(self):
         for game in self.nodeList:
-            print("game:", game.value, game.team1, game.team2)
+            # print("game:", game.value, game.team1, game.team2)
             result = self.getMatchPrediction(int(game.team1.teamID),int(game.team2.teamID))
-            print("result: ",result[0], "chance:", result[1])
+            # print("result: ",result[0], "chance:", result[1])
             game.winPct = result[1]
             if(game.parent==None):
-                print("no parents")
+                # print("no parents")
                 if (result[0] == 1):
                     print(1)
                     game.winner = game.team1  
@@ -122,30 +122,31 @@ class Tournament:
                     print(2)
                     game.winner = game.team2        
             elif (game==game.parent.left):
-                print('left')
+                # print('left')
                 if (result[0] == 1):
-                    print(1)
+                    # print(1)
                     game.winner = game.team1
                     game.parent.team1 = game.team1   
 
                 elif(result[0]== 0):
-                    print(2)
+                    # print(2)
                     game.winner = game.team2       
                     game.parent.team1 = game.team2
 
             elif (game==game.parent.right):
-                print('right')
+                # print('right')
                 if (result[0] == 1):                                    
-                    print(3)
+                    # print(3)
                     game.winner = game.team2
                     game.parent.team2 = game.team1
 
                 elif(result[0]== 0):
-                    print(4)
+                    # print(4)
                     game.winner = game.team1
                     game.parent.team2 = game.team2
 
             else:
-                print("no parents :(")
+                # print("no parents :(")
+                pass
 
             self.reverseLevelOrder()
