@@ -499,7 +499,7 @@ app.layout = html.Div([
         ]),
         html.Br(),
         html.Div([
-            dcc.RadioItems(['Linear', 'Logistic', 'Random Tree', 'Random Forest', 'Neural Net'], 'Random Forest', id='i-model-type'),
+            dcc.RadioItems(['Linear', 'Logistic', 'Random Forest', 'Neural Net'], 'Random Forest', id='i-model-type'),
         ]),
 
     ],style={'width': '30%', 'display':'inline-block', 'vertical-align':'top'}),   
@@ -557,8 +557,44 @@ def update_output(value, modelType, modelFeatures):
     ))
     heatmap_figure.update_layout(height=600,yaxis_nticks=len(df_corr))
 
+    if modelType == 'Random Forest':
+        X = df_training_set[cols][(df_training_set['Season']>=value[0]) & (df_training_set['Season']<=value[1])]
+        y = df_training_set['Result'][(df_training_set['Season']>=value[0]) & (df_training_set['Season']<=value[1])]
+        from sklearn.ensemble import RandomForestClassifier
+        RFClassifier = RandomForestClassifier(n_estimators = 1)
+
+        RFClassifier.fit(X,y)
+
+        for year in range(2003,2019):
+            X_test = df_training_set[df_training_set['Season'] == year][cols]
+            y_test = df_training_set[df_training_set['Season'] == year]['Result']
+
+            #not sure if this should be :,1 or :,0
+            df_results = X_test
+            df_results['Prediction'] = RFClassifier.predict_proba(X_test)[:,1]
+            df_results['Result'] = y_test
+            df_results
+            
+            df_results.loc[df_results['Prediction'] > 0.9, 'Prediction']=0.99
+            df_results.loc[df_results['Prediction'] < 0.1, 'Prediction']=0.01
+            
+            correct = df_results.loc[(df_results['Result']==0) & (df_results['Prediction']<0.5)].shape[0]
+            correct = correct + df_results.loc[(df_results['Result']==1) & (df_results['Prediction']>0.5)].shape[0]
+
+            total = df_results.shape[0]
+
+            accuracy = correct/total
+
+            error = -np.log(1-df_results.loc[df_results['Result'] == 0]['Prediction']).mean()
+            data = {'Season':year,'Error':error, 'Accuracy': accuracy}
+            print(data)
+            
+            df_modelResults = df_modelResults.append(data, ignore_index=True)
+
+
+
 ## Logistic
-    if modelType == 'Logistic':
+    elif modelType == 'Logistic':
         X = df_training_set[cols][(df_training_set['Season']>=value[0]) & (df_training_set['Season']<=value[1])]
         y = df_training_set['Result'][(df_training_set['Season']>=value[0]) & (df_training_set['Season']<=value[1])]
 
@@ -596,7 +632,7 @@ def update_output(value, modelType, modelFeatures):
                 
                 df_modelResults = df_modelResults.append(data, ignore_index=True)
 
-    if modelType == 'Linear':
+    elif modelType == 'Linear':
         X = df_training_set[cols][(df_training_set['Season']>=value[0]) & (df_training_set['Season']<=value[1])]
         y = df_training_set['Result'][(df_training_set['Season']>=value[0]) & (df_training_set['Season']<=value[1])]
         linearModel = linear_model.LinearRegression()
