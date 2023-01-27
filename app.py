@@ -244,22 +244,22 @@ heatmap_figure.add_trace(
     )
 )
 bracket_figure = go.Figure()
-bracket_figure.add_trace(go.Scatter(
-    x=[-10, 0],
-    y=[4, 4],
-    mode="lines+text",
-    line_color="black",
-    name="Lines and Text",
-    # text=[tourn.root.right.value, tourn.root.team2.getString()],
-    #     text
-    textposition="top left",
-    textfont=dict(
-        family="sans serif",
-        size=18,
-        color="black"
-    )    
-    )
-) 
+# bracket_figure.add_trace(go.Scatter(
+#     x=[-10, 0],
+#     y=[4, 4],
+#     mode="lines+text",
+#     line_color="black",
+#     name="Lines and Text",
+#     # text=[tourn.root.right.value, tourn.root.team2.getString()],
+#     #     text
+#     textposition="top left",
+#     textfont=dict(
+#         family="sans serif",
+#         size=18,
+#         color="black"
+#     )    
+#     )
+# ) 
 bracket_figure.update_layout(plot_bgcolor="white", showlegend=False)
 bracket_figure.update_xaxes(showticklabels=False)
 bracket_figure.update_yaxes(showticklabels=False)     
@@ -305,8 +305,9 @@ tourn = initializeTournament()
 tourn.reverseLevelOrder()
 gamesList = tourn.nodeList.copy()
 df_modelResults = pd.DataFrame(columns=['Season','Error','Accuracy'])
-data = {'Season':2022,'Error':0, 'Accuracy': 0}
-df_modelResults = df_modelResults.append(data, ignore_index=True)
+data = {'Season':[2022],'Error':[0], 'Accuracy': [0]}
+df_modelResults = pd.DataFrame(data)
+
 
 #################
 app.layout = html.Div([
@@ -423,39 +424,44 @@ def update_output(seasonRange, modelType, modelFeatures):
         tourn.populatePredictionsList(df_stage1Combinations)
 
         for year in range(seasonRange[0],seasonRange[1]):
-            X_test = df_training_set[df_training_set['Season'] == year][cols]
-            y_test = df_training_set[df_training_set['Season'] == year]['Result']
+            if year != 2020:
+                X_test = df_training_set[df_training_set['Season'] == year][cols]
+                y_test = df_training_set[df_training_set['Season'] == year]['Result']
 
-            #not sure if this should be :,1 or :,0
-            df_results = X_test
-            df_results['Prediction'] = RFClassifier.predict_proba(X_test)[:,1]
-            df_results['Result'] = y_test
+                #not sure if this should be :,1 or :,0
+                df_results = X_test
+                df_results['Prediction'] = RFClassifier.predict_proba(X_test)[:,1]
+                df_results['Result'] = y_test
 
-            # df_results
-            
-            df_results.loc[df_results['Prediction'] > 0.9, 'Prediction']=0.99
-            df_results.loc[df_results['Prediction'] < 0.1, 'Prediction']=0.01
+                # df_results
+                
+                df_results.loc[df_results['Prediction'] > 0.9, 'Prediction']=0.99
+                df_results.loc[df_results['Prediction'] < 0.1, 'Prediction']=0.01
 
-            
-            
-            correct = df_results.loc[(df_results['Result']==0) & (df_results['Prediction']<0.5)].shape[0]
-            correct = correct + df_results.loc[(df_results['Result']==1) & (df_results['Prediction']>0.5)].shape[0]
-            
-            # print("correct", correct)
-            total = df_results.shape[0]
-            # print("total", total)
-            # print("accuracy" + total)
-            # print(correct)
+                
+                
+                correct = df_results.loc[(df_results['Result']==0) & (df_results['Prediction']<0.5)].shape[0]
+                correct = correct + df_results.loc[(df_results['Result']==1) & (df_results['Prediction']>0.5)].shape[0]
+                
+                # print("correct", correct)
+                total = df_results.shape[0]
+                # print("total", total)
+                # print("accuracy" + total)
+                # print(correct)
 
-            accuracy = correct/total
-            # print("accuracy", accuracy)
+                accuracy = correct/total
+                # print("accuracy", accuracy)
 
-            error = -np.log(1-df_results.loc[df_results['Result'] == 0]['Prediction']).mean()
-            # print("error", error)
-            data = {'Season':year,'Error':error, 'Accuracy': accuracy}
-            # print(data)
-            
-            df_modelResults = df_modelResults.append(data, ignore_index=True)
+                error = -np.log(1-df_results.loc[df_results['Result'] == 0]['Prediction']).mean()
+                # print("error", error)
+                data = {'Season':[year],'Error':[error], 'Accuracy': [accuracy]}
+                # print(data)
+                
+                # df_modelResults = df_modelResults.append(data, ignore_index=True)
+
+                df_newRow = pd.DataFrame(data)
+                # print(df_newRow)
+                df_modelResults = pd.concat([df_modelResults, df_newRow], ignore_index=True)
 
 ## Logistic
     elif modelType == 'Logistic':
@@ -488,10 +494,10 @@ def update_output(seasonRange, modelType, modelFeatures):
                 df_results.loc[df_results['Prediction'] < 0.1, 'Prediction']=0.01
 
                 error = -np.log(1-df_results.loc[df_results['Result'] == 0]['Prediction']).mean()
-                data = {'Season':year,'Error':error, 'Accuracy': accuracy}
+                data = {'Season':[year],'Error':[error], 'Accuracy': [accuracy]}
                 print(data)
-                
-                df_modelResults = df_modelResults.append(data, ignore_index=True)
+                df_newRow = pd.DataFrame(data)
+                df_modelResults = pd.concat([df_modelResults, df_newRow], ignore_index=True)
 
     elif modelType == 'Linear':
         print('linear')
@@ -525,10 +531,13 @@ def update_output(seasonRange, modelType, modelFeatures):
                 # print("accuracy", accuracy)
 
                 error = -np.log(1-df_results.loc[df_results['Result'] == 0]['Prediction']).mean()
-                data = {'Season':year,'Error':error, 'Accuracy': accuracy}
+                data = {'Season':[year],'Error':[error], 'Accuracy': [accuracy]}
                 # print(data)
                 
-                df_modelResults = df_modelResults.append(data, ignore_index=True)
+                # df_modelResults = df_modelResults.append(data, ignore_index=True)
+
+                df_newRow = pd.DataFrame(data)
+                df_modelResults = pd.concat([df_modelResults, df_newRow], ignore_index=True)
 
     print("made it here1")
 
@@ -583,7 +592,7 @@ def update_output(seasonRange, modelType, modelFeatures):
         line_color="black",
         name="Lines and Text",
         textposition=textPosition,
-        text=[node.value + " " + str(node.winPct) + " " + node.team2.getString()],
+        text=[node.value + " " + node.team2.getString()],
     #     text=['team2'],
         textfont=dict(
             family="sans serif",
@@ -624,12 +633,12 @@ def update_output(seasonRange, modelType, modelFeatures):
         mode="lines+text",
         line_color="black",
         name="Lines and Text",
-        text=[tourn.root.left.value, tourn.root.team1.getString()],
+        text=[tourn.root.left.value + " " + str(tourn.root.left.winPct) + " " + tourn.root.team2.getString()],
         #     text
         textposition="top right",
         textfont=dict(
             family="sans serif",
-            size=18,
+            size=10,
             color="black"
         )    
     )
@@ -642,12 +651,12 @@ def update_output(seasonRange, modelType, modelFeatures):
         mode="lines+text",
         line_color="black",
         name="Lines and Text",
-        text=[tourn.root.right.value, tourn.root.team2.getString()],
+        text=[tourn.root.left.value + " " + str(tourn.root.left.winPct) + " " + tourn.root.team1.getString()],
         #     text
-        textposition="top left",
+        textposition="top right",
         textfont=dict(
             family="sans serif",
-            size=18,
+            size=10,
             color="black"
         )    
         )
@@ -659,12 +668,12 @@ def update_output(seasonRange, modelType, modelFeatures):
         mode="lines+text",
         line_color="black",
         name="Lines and Text",
-        text=[tourn.root.winner.getString()],
+        text=[tourn.root.left.value + " " + str(tourn.root.winPct) + " " + tourn.root.winner.getString()],
         #     text
         textposition="top right",
         textfont=dict(
             family="sans serif",
-            size=18,
+            size=10,
             color="black"
         )    
         )

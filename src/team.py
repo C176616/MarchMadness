@@ -11,4 +11,4 @@ class Team():
         return self.teamName
 
     def getString(self):
-        return(str(self.teamName))
+        return(str(self.teamName) + " " +str(self.teamSeed))
