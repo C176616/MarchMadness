@@ -7,6 +7,8 @@ from sklearn import linear_model
 import numpy as np
 import plotly.graph_objects as go
 
+from sklearn.ensemble import RandomForestClassifier
+
 # from src.team import Team
 from src.tournament import Tournament
 from src.matchPrediction import MatchPrediction
@@ -557,15 +559,19 @@ def update_output(value, modelType, modelFeatures):
     ))
     heatmap_figure.update_layout(height=600,yaxis_nticks=len(df_corr))
 
-    if modelType == 'Random Forest':
-        X = df_training_set[cols][(df_training_set['Season']>=value[0]) & (df_training_set['Season']<=value[1])]
-        y = df_training_set['Result'][(df_training_set['Season']>=value[0]) & (df_training_set['Season']<=value[1])]
-        from sklearn.ensemble import RandomForestClassifier
-        RFClassifier = RandomForestClassifier(n_estimators = 1)
+    X = df_training_set[cols][(df_training_set['Season']>=value[0]) & (df_training_set['Season']<=value[1])]
+    y = df_training_set['Result'][(df_training_set['Season']>=value[0]) & (df_training_set['Season']<=value[1])]
 
+    if modelType == 'Random Forest':
+        RFClassifier = RandomForestClassifier(n_estimators = 1)
         RFClassifier.fit(X,y)
 
-        for year in range(2003,2019):
+        X_pred = df_training_set_stage2[cols]
+        pred = model.predict_proba(X_pred)[:,1]
+        df_stage1Combinations['Pred'] = np.round(pred,2)
+        tourn.populatePredictionsList(df_stage1Combinations)
+
+        for year in range(value[0],value[1]):
             X_test = df_training_set[df_training_set['Season'] == year][cols]
             y_test = df_training_set[df_training_set['Season'] == year]['Result']
 
@@ -595,11 +601,7 @@ def update_output(value, modelType, modelFeatures):
 
 ## Logistic
     elif modelType == 'Logistic':
-        X = df_training_set[cols][(df_training_set['Season']>=value[0]) & (df_training_set['Season']<=value[1])]
-        y = df_training_set['Result'][(df_training_set['Season']>=value[0]) & (df_training_set['Season']<=value[1])]
-
         model = linear_model.LogisticRegression(solver='lbfgs')
-
         model.fit(X,y)
 
         X_pred = df_training_set_stage2[cols]
@@ -633,12 +635,8 @@ def update_output(value, modelType, modelFeatures):
                 df_modelResults = df_modelResults.append(data, ignore_index=True)
 
     elif modelType == 'Linear':
-        X = df_training_set[cols][(df_training_set['Season']>=value[0]) & (df_training_set['Season']<=value[1])]
-        y = df_training_set['Result'][(df_training_set['Season']>=value[0]) & (df_training_set['Season']<=value[1])]
         linearModel = linear_model.LinearRegression()
         linearModel.fit(X,y)
-        a = linearModel.score(X,y)
-        #generate preditions list
         
         X_pred = df_training_set_stage2[cols]
         pred = linearModel.predict(X_pred)
@@ -668,208 +666,202 @@ def update_output(value, modelType, modelFeatures):
                 
                 df_modelResults = df_modelResults.append(data, ignore_index=True)
 
-        tourn.populatePredictionsList(df_stage1Combinations)
+    for game in tourn.nodeList:
+        print("game:", game.value, game.team1, game.team2)
+        result = tourn.getMatchPrediction(int(game.team1.teamID),int(game.team2.teamID))
+        print("result: ",result[0], "chance:", result[1])
+        game.winPct = result[1]
+        if(game.parent==None):
+            print("no parents")
+            if (result[0] == 1):
+                print(1)
+                game.winner = game.team1  
+            elif(result[0]== 0):
+                print(2)
+                game.winner = game.team2        
+        elif (game==game.parent.left):
+            print('left')
+            if (result[0] == 1):
+                print(1)
+                game.winner = game.team1
+                game.parent.team1 = game.team1   
 
-        for game in tourn.nodeList:
-            print("game:", game.value, game.team1, game.team2)
-        #     print("parent",game.parent)
-        #     print(game.value, game.team1ID, game.team2ID)
-            result = tourn.getMatchPrediction(int(game.team1.teamID),int(game.team2.teamID))
-            print("result: ",result[0], "chance:", result[1])
-            game.winPct = result[1]
-            if(game.parent==None):
-                print("no parents")
-                if (result[0] == 1):
-                    print(1)
-                    game.winner = game.team1  
-                elif(result[0]== 0):
-                    print(2)
-                    game.winner = game.team2        
-            elif (game==game.parent.left):
-                print('left')
-                if (result[0] == 1):
-                    print(1)
-                    game.winner = game.team1
-                    game.parent.team1 = game.team1   
+            elif(result[0]== 0):
+                print(2)
+                game.winner = game.team2       
+                game.parent.team1 = game.team2
 
-                elif(result[0]== 0):
-                    print(2)
-                    game.winner = game.team2       
-                    game.parent.team1 = game.team2
+        elif (game==game.parent.right):
+            print('right')
+            if (result[0] == 1):
+                print(3)
+                game.winner = game.team2
+                game.parent.team2 = game.team1
 
-            elif (game==game.parent.right):
-                print('right')
-                if (result[0] == 1):
-                    print(3)
-                    game.winner = game.team2
-                    game.parent.team2 = game.team1
+            elif(result[0]== 0):
+                print(4)
+                game.winner = game.team1
+                game.parent.team2 = game.team2
 
-                elif(result[0]== 0):
-                    print(4)
-                    game.winner = game.team1
-                    game.parent.team2 = game.team2
+        else:
+            print("no parents :(")
 
-            else:
-                print("no parents :(")
+    tourn.reverseLevelOrder()
 
-        tourn.reverseLevelOrder()
+    
+    bracket_figure.update_layout(width=1600, height=1000)
 
-        
-        bracket_figure.update_layout(width=1600, height=1000)
-
-        tourn.reverseLevelOrder()
-        gamesList = tourn.nodeList.copy()
+    tourn.reverseLevelOrder()
+    gamesList = tourn.nodeList.copy()
 
 ## pre round
 
 
-        width_dist = 10
-        depth_dist = 10
-        levels = 6
+    width_dist = 10
+    depth_dist = 10
+    levels = 6
 
 
-        def bintree_level(node, levels, x, y, width, side):
-            segments = []
-            if side=='left':
-                xl = x - depth_dist
-                xr = x - depth_dist
-                textPosition = "top left"
-            elif side=='right':
-                xl = x + depth_dist
-                xr = x + depth_dist
-                textPosition = "top right"
+    def bintree_level(node, levels, x, y, width, side):
+        segments = []
+        if side=='left':
+            xl = x - depth_dist
+            xr = x - depth_dist
+            textPosition = "top left"
+        elif side=='right':
+            xl = x + depth_dist
+            xr = x + depth_dist
+            textPosition = "top right"
 
-            yr = y + width / 2
-            yl = y - width / 2
-            
-            # print team1 
-            bracket_figure.add_trace(go.Scatter(
-            x=[x, xl],
-            y=[yl, yl],
-            mode="lines+text",
-            line_color="black",
-            name="Lines and Text",
-            text=[node.value + " " + str(node.winPct) + " " + node.team1.getString()],
-        #     text
-            textposition=textPosition,
-            textfont=dict(
-                family="sans serif",
-                size=10,
-                color="black"
-            )    
-            )
-            )
-            
-            # print team2
-            bracket_figure.add_trace(go.Scatter(
-            x=[x, xr],
-            y=[yr, yr],
-            mode="lines+text",
-            line_color="black",
-            name="Lines and Text",
-            textposition=textPosition,
-            text=[node.value + " " + str(node.winPct) + " " + node.team2.getString()],
-        #     text=['team2'],
-            textfont=dict(
-                family="sans serif",
-                size=10,
-                color="black"
-            )
-            )
-            )
-            
-            # print line connecting team1 and team 2
-            bracket_figure.add_trace(go.Scatter(
-            x=[x,x],
-            y=[yl, yr],
-            mode="lines",
-            line_color="black",
-            ))
-            
-            #recursively call this function
-            if levels > 2:
-                print(levels)
-                bintree_level(node.left, levels - 1, xl, yl, width / 2, side)
-                bintree_level(node.right, levels - 1, xr, yr, width  / 2, side)
-                
-            # recursion base condition
-            if levels == 1:
-                print("yes")
-
-
-                #print final
-            
-
-        j = 0
-        node1 = tourn.root.left
-        node2 = tourn.root.right
-        bintree_level(node1,levels,-10,0,width_dist,'left')
-        bintree_level(node2,levels,10,0,width_dist,'right')
-
-        print('ready for final')
-        #final right
+        yr = y + width / 2
+        yl = y - width / 2
+        
+        # print team1 
         bracket_figure.add_trace(go.Scatter(
-        x=[0, 10],
-        y=[-4, -4],
+        x=[x, xl],
+        y=[yl, yl],
         mode="lines+text",
         line_color="black",
         name="Lines and Text",
-        text=[tourn.root.left.value, tourn.root.team1.getString()],
-        #     text
-        textposition="top right",
+        text=[node.value + " " + str(node.winPct) + " " + node.team1.getString()],
+    #     text
+        textposition=textPosition,
         textfont=dict(
             family="sans serif",
-            size=18,
+            size=10,
             color="black"
         )    
         )
-        )  
-
-        #final left
+        )
+        
+        # print team2
         bracket_figure.add_trace(go.Scatter(
-        x=[-10, 0],
-        y=[4, 4],
+        x=[x, xr],
+        y=[yr, yr],
         mode="lines+text",
         line_color="black",
         name="Lines and Text",
-        text=[tourn.root.right.value, tourn.root.team2.getString()],
-        #     text
-        textposition="top left",
+        textposition=textPosition,
+        text=[node.value + " " + str(node.winPct) + " " + node.team2.getString()],
+    #     text=['team2'],
         textfont=dict(
             family="sans serif",
-            size=18,
+            size=10,
             color="black"
-        )    
         )
-        ) 
-
+        )
+        )
+        
+        # print line connecting team1 and team 2
         bracket_figure.add_trace(go.Scatter(
-        x=[-8, 8],
-        y=[0, 0],
-        mode="lines+text",
+        x=[x,x],
+        y=[yl, yr],
+        mode="lines",
         line_color="black",
-        name="Lines and Text",
-        text=[tourn.root.winner.getString()],
-        #     text
-        textposition="top right",
-        textfont=dict(
-            family="sans serif",
-            size=18,
-            color="black"
-        )    
-        )
-        ) 
+        ))
+        
+        #recursively call this function
+        if levels > 2:
+            print(levels)
+            bintree_level(node.left, levels - 1, xl, yl, width / 2, side)
+            bintree_level(node.right, levels - 1, xr, yr, width  / 2, side)
+            
+        # recursion base condition
+        if levels == 1:
+            print("yes")
+
+
+            #print final
+        
+
+    j = 0
+    node1 = tourn.root.left
+    node2 = tourn.root.right
+    bintree_level(node1,levels,-10,0,width_dist,'left')
+    bintree_level(node2,levels,10,0,width_dist,'right')
+
+    print('ready for final')
+    #final right
+    bracket_figure.add_trace(go.Scatter(
+    x=[0, 10],
+    y=[-4, -4],
+    mode="lines+text",
+    line_color="black",
+    name="Lines and Text",
+    text=[tourn.root.left.value, tourn.root.team1.getString()],
+    #     text
+    textposition="top right",
+    textfont=dict(
+        family="sans serif",
+        size=18,
+        color="black"
+    )    
+    )
+    )  
+
+    #final left
+    bracket_figure.add_trace(go.Scatter(
+    x=[-10, 0],
+    y=[4, 4],
+    mode="lines+text",
+    line_color="black",
+    name="Lines and Text",
+    text=[tourn.root.right.value, tourn.root.team2.getString()],
+    #     text
+    textposition="top left",
+    textfont=dict(
+        family="sans serif",
+        size=18,
+        color="black"
+    )    
+    )
+    ) 
+
+    bracket_figure.add_trace(go.Scatter(
+    x=[-8, 8],
+    y=[0, 0],
+    mode="lines+text",
+    line_color="black",
+    name="Lines and Text",
+    text=[tourn.root.winner.getString()],
+    #     text
+    textposition="top right",
+    textfont=dict(
+        family="sans serif",
+        size=18,
+        color="black"
+    )    
+    )
+    ) 
 # paper_bgcolor="grey"
-        bracket_figure.update_layout(plot_bgcolor="white", showlegend=False)
-        bracket_figure.update_xaxes(showticklabels=False)
-        bracket_figure.update_yaxes(showticklabels=False)            
+    bracket_figure.update_layout(plot_bgcolor="white", showlegend=False)
+    bracket_figure.update_xaxes(showticklabels=False)
+    bracket_figure.update_yaxes(showticklabels=False)            
     # Logistic
     # Random Tree
     # Random Forest
     # Neural Net
 
-    else:
-        pass
     
     print(df_modelResults)
     resultsTable = generate_table(df_modelResults)
