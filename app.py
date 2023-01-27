@@ -557,8 +557,46 @@ def update_output(value, modelType, modelFeatures):
     ))
     heatmap_figure.update_layout(height=600,yaxis_nticks=len(df_corr))
 
+## Logistic
+    if modelType == 'Logistic':
+        X = df_training_set[cols][(df_training_set['Season']>=value[0]) & (df_training_set['Season']<=value[1])]
+        y = df_training_set['Result'][(df_training_set['Season']>=value[0]) & (df_training_set['Season']<=value[1])]
+
+        model = linear_model.LogisticRegression(solver='lbfgs')
+
+        model.fit(X,y)
+
+        X_pred = df_training_set_stage2[cols]
+        pred = model.predict_proba(X_pred)[:,1]
+        df_stage1Combinations['Pred'] = np.round(pred,2)
+        tourn.populatePredictionsList(df_stage1Combinations)
+
+        for year in range(value[0],value[1]):
+            if year != 2020:
+                X_test = df_training_set[df_training_set['Season'] == year][cols]
+                y_test = df_training_set[df_training_set['Season'] == year]['Result']
+
+                df_results = X_test
+                df_results['Prediction'] = model.predict_proba(X_test)[:,1]
+                df_results['Result'] = y_test
+                
+                correct = df_results.loc[(df_results['Result']==0) & (df_results['Prediction']<0.5)].shape[0]
+                correct = correct + df_results.loc[(df_results['Result']==1) & (df_results['Prediction']>0.5)].shape[0]
+
+                total = df_results.shape[0]
+
+                accuracy = correct/total
+
+                df_results.loc[df_results['Prediction'] > 0.9, 'Prediction']=0.99
+                df_results.loc[df_results['Prediction'] < 0.1, 'Prediction']=0.01
+
+                error = -np.log(1-df_results.loc[df_results['Result'] == 0]['Prediction']).mean()
+                data = {'Season':year,'Error':error, 'Accuracy': accuracy}
+                print(data)
+                
+                df_modelResults = df_modelResults.append(data, ignore_index=True)
+
     if modelType == 'Linear':
-        testModelType = 'yes thats it'
         X = df_training_set[cols][(df_training_set['Season']>=value[0]) & (df_training_set['Season']<=value[1])]
         y = df_training_set['Result'][(df_training_set['Season']>=value[0]) & (df_training_set['Season']<=value[1])]
         linearModel = linear_model.LinearRegression()
