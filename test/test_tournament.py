@@ -1,6 +1,8 @@
 import pytest
-from src.team import Team
+import sys
+
 from src.game import Game
+from src.team import Team
 from src.tournament import Tournament
 
 @pytest.fixture
@@ -29,5 +31,23 @@ def test_setup(setup):
 def test_reverseLevelOrder(setup):
     setup.reverseLevelOrder() == []
 
+def test_printGivenLevel(setup):
+    pass
+
+def test_calculateHeight(setup):
+    assert setup.calculateHeight() == 3
+
+def getNode(setup):
+    pass
+
+def test_populateTeams(self):
+    pass
+
+def populatePredictionsList(self):
+    pass
+
 def test_getMatchPrediction(setup):
+    pass
+
+def simulateTournament(setup):
     pass

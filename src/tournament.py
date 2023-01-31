@@ -8,15 +8,15 @@ class Tournament:
     def __init__(self,root):
         self.root = root
         self.nodeList = [] 
-        self.predictionsList = []
-        
+        self.predictionsList = []        
+
     def reverseLevelOrder(self):
         self.nodeList = []
         h = self.calculateHeight(self.root)
         for i in reversed(range(1, h+1)):
             self.printGivenLevel(self.root,i)
             
-    def printGivenLevel(self, root, level): 
+    def printGivenLevel(self, root, level):
         if root is None:
             return
         if level ==1:
@@ -72,9 +72,7 @@ class Tournament:
     #                 game.team1Name = a['TeamName'].values[0]
     #             if b.empty != True:
     #                 game.team2Name = b['TeamName'].values[0]
-                
-    def flatten(self):
-        pass
+        
 
     def populatePredictionsList(self, df_stage1Combinations):
         self.predictionsList = []
