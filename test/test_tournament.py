@@ -5,6 +5,7 @@ from src.game import Game
 from src.team import Team
 from src.tournament import Tournament
 
+
 @pytest.fixture
 def setup():
     root = Game('R6CH')
@@ -25,29 +26,54 @@ def setup():
     tourn = Tournament(root)
     yield tourn
 
-def test_setup(setup):
-    assert setup.root.left == setup.root.left.left.parent
 
-def test_reverseLevelOrder(setup):
-    setup.reverseLevelOrder() == []
+def test_iterator(setup):
+    myiter = iter(setup)
+    assert next(myiter).value == 'R4W1'
+    assert next(myiter).value == 'R4X1'
+    assert next(myiter).value == 'R4Y1'
+    assert next(myiter).value == 'R4Z1'
+    assert next(myiter).value == 'R5WX'
+    assert next(myiter).value == 'R5YZ'
+    assert next(myiter).value == 'R6CH'
 
-def test_printGivenLevel(setup):
-    pass
 
-def test_calculateHeight(setup):
-    assert setup.calculateHeight() == 3
+def test_iterator2(setup):
+    myiter2 = iter(setup)
+    list = []
+    for item in myiter2:
+        list.append(item.value)
 
-def getNode(setup):
-    pass
+    assert list == ['R4W1', 'R4X1', 'R4Y1', 'R4Z1', 'R5WX', 'R5YZ', 'R6CH']
 
-def test_populateTeams(self):
-    pass
 
-def populatePredictionsList(self):
-    pass
+def test_getNode(setup):
+    assert setup.getNode('R4Y1').value == 'R4Y1'
 
-def test_getMatchPrediction(setup):
-    pass
 
-def simulateTournament(setup):
-    pass
+# def test_setup(setup):
+#     assert setup.root.left == setup.root.left.left.parent
+
+# # def test_reverseLevelOrder(setup):
+# #     setup.reverseLevelOrder() == []
+
+# def test_printGivenLevel(setup):
+#     pass
+
+# def test_calculateHeight(setup):
+#     assert setup.calculateHeight(setup.root) == 3
+
+# def getNode(setup):
+#     assert setup.getNode('R4Y1').value == 'R4Y1'
+
+# def test_populateTeams(setup):
+#     pass
+
+# def populatePredictionsList(setup):
+#     pass
+
+# def test_getMatchPrediction(setup):
+#     pass
+
+# def test_simulateTournament(setup):
+#     pass

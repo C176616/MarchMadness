@@ -1,87 +1,112 @@
 import plotly.graph_objects as go
 import plotly.express as px
-from src.matchPrediction import MatchPrediction
 import numpy as np
+
+from collections import deque
+
+from src.matchPrediction import MatchPrediction
 from src.team import Team
 
+
 class Tournament:
-    def __init__(self,root):
+    """ 
+    This is a class that represents a tournament bracket. It is essesntially
+    representing a tournament as a binary tree. 
+    
+    Parameteres
+    -----------
+    root : :obj: 'Game'
+        A Game that represents the champions (root) of the tournament tree
+
+    Attributes
+    -----------
+    root : :obj: 'Game'
+        A Game that represents the champions (root) of the tournament tree
+    nodeList :obj:'list' :obj:'game"
+        A list in reverse level traversal order of the games in the tournament.
+        Meant to be used until an iterator was developed. Deprecated in future
+        versions
+    predictionsList : 
+
+    """
+
+    def __init__(self, root):
         self.root = root
-        self.nodeList = [] 
-        self.predictionsList = []        
-
-    def reverseLevelOrder(self):
         self.nodeList = []
-        h = self.calculateHeight(self.root)
-        for i in reversed(range(1, h+1)):
-            self.printGivenLevel(self.root,i)
-            
-    def printGivenLevel(self, root, level):
-        if root is None:
-            return
-        if level ==1:
-            self.nodeList.append(root)
+        self.predictionsList = []
 
-        elif level>1:
-            self.printGivenLevel(root.left, level-1)
-            self.printGivenLevel(root.right, level-1)
+    """
+    An iterator that yields the tournament tree in reverse level order
 
-    def calculateHeight(self, node):
-        if node is None:
-            return 0
-        else:
-            # Compute the height of each subtree
-            lheight = self.calculateHeight(node.left)
-            rheight = self.calculateHeight(node.right)
+    Example - For loop:
+        myiter = iter(tourn)
+        for item in myiter:
+            print(item)
+    Example - next
+        myiter = iter(tourn)
+        item = next(myiter)
+    """
 
-            # Use the larger one
-            if lheight > rheight :
-                return lheight + 1
-            else:
-                return rheight + 1
-            
-    def getNode(self, node):
-        for i in self.nodeList:
-            if i.value==node:
-                return i        
+    def __iter__(self):
+        queue = deque()
+        queue.append(self.root)
+        stack = deque()
+
+        while queue:
+            curr = queue.popleft()
+            stack.append(curr)
+
+            if curr.right:
+                queue.append(curr.right)
+
+            if curr.left:
+                queue.append(curr.left)
+
+        while stack:
+            yield stack.pop()
+
+    """Generates
+    """
+
+    def getNode(self, nodeValue):
+        """ 
+        Parameters
+        ----------
+        nodeValue : str
+            a string of the value of the node to find
+
+        Returns
+        -------
+        :obj: game the game node object that has the value of the given
+            nodeValue
+        """
+        myiter = iter(self)
+        for item in myiter:
+            if item.value == nodeValue:
+                return item
 
     def populateTeams(self, df_info):
         for game in self.nodeList:
             if [*game.value][1] == '1':
-                slot = df_info[df_info['Slot']==game.value]
-                print(slot['StrongSeed'].values[0])                          
+                slot = df_info[df_info['Slot'] == game.value]
+                print(slot['StrongSeed'].values[0])
                 if slot.empty != True:
-                    game.team1 = Team(slot['StrongSeed'].values[0],slot['Team1ID'].values[0],slot['Team1Name'].values[0])
-                    game.team2 = Team(slot['WeakSeed'].values[0],slot['Team2ID'].values[0],slot['Team2Name'].values[0])
-    
-    # def populateTeams(self, df_slots, df_seeds, df_names):
-    #     for game in self.nodeList:
-    #         game.team1Seed = df_slots[df_slots['Slot']==game.value]['StrongSeed'].values[0]
-    #         game.team2Seed = df_slots[df_slots['Slot']==game.value]['WeakSeed'].values[0]
-    #         if [*game.value][1] == '1':
-    #             a = df_seeds[df_seeds['Seed']==game.team1Seed]
-    #             b = df_seeds[df_seeds['Seed']==game.team2Seed]
-    #             if a.empty != True:
-    #                 game.team1ID = a['TeamID'].values[0]
-    #             if b.empty != True:
-    #                 game.team2ID = b['TeamID'].values[0]
-
-    #             a = df_names[df_names['TeamID']==game.team1ID]
-    #             b = df_names[df_names['TeamID']==game.team2ID]
-    #             if a.empty != True:
-    #                 game.team1Name = a['TeamName'].values[0]
-    #             if b.empty != True:
-    #                 game.team2Name = b['TeamName'].values[0]
-        
+                    game.team1 = Team(slot['StrongSeed'].values[0],
+                                      slot['Team1ID'].values[0],
+                                      slot['Team1Name'].values[0])
+                    game.team2 = Team(slot['WeakSeed'].values[0],
+                                      slot['Team2ID'].values[0],
+                                      slot['Team2Name'].values[0])
 
     def populatePredictionsList(self, df_stage1Combinations):
         self.predictionsList = []
         for index, row in df_stage1Combinations.iterrows():
-            self.predictionsList.append(MatchPrediction(row['ID'], row['Pred']))
-    
-    def getMatchPrediction(self, team1ID, team2ID):        
-        gameID1 = '2022_' + str(int(team1ID))+ '_' +str((team2ID))
-        gameID2 = '2022_' + str(int(team2ID))+ '_' +str(int(team1ID))    
+            self.predictionsList.append(MatchPrediction(
+                row['ID'], row['Pred']))
+
+    def getMatchPrediction(self, team1ID, team2ID):
+        gameID1 = '2022_' + str(int(team1ID)) + '_' + str((team2ID))
+        gameID2 = '2022_' + str(int(team2ID)) + '_' + str(int(team1ID))
         # print("teamID",gameID1)
 
         randResult = np.random.random()
@@ -90,10 +115,10 @@ class Tournament:
             if i.ID == gameID1:
                 if i.pred > randResult:
                     result = 0
-                    return(result,i.pred)
+                    return (result, i.pred)
                 else:
                     result = 1
-                    return(result,i.pred)
+                    return (result, i.pred)
 
         for i in self.predictionsList:
             if i.ID == gameID2:
@@ -102,49 +127,44 @@ class Tournament:
                     return (result, i.pred)
                 else:
                     result = 1
-                    return(result,i.pred)
-
+                    return (result, i.pred)
 
     def simulateTournament(self):
         for game in self.nodeList:
             # print("game:", game.value, game.team1, game.team2)
-            result = self.getMatchPrediction(int(game.team1.teamID),int(game.team2.teamID))
+            result = self.getMatchPrediction(int(game.team1.teamID),
+                                             int(game.team2.teamID))
             # print("result: ",result[0], "chance:", result[1])
             game.winPct = result[1]
-            if(game.parent==None):
+            if (game.parent == None):
                 # print("no parents")
                 if (result[0] == 1):
                     print(1)
-                    game.winner = game.team1  
-                elif(result[0]== 0):
+                    game.winner = game.team1
+                elif (result[0] == 0):
                     print(2)
-                    game.winner = game.team2        
-            elif (game==game.parent.left):
+                    game.winner = game.team2
+            elif (game == game.parent.left):
                 # print('left')
                 if (result[0] == 1):
                     # print(1)
                     game.winner = game.team1
-                    game.parent.team1 = game.team1   
+                    game.parent.team1 = game.team1
 
-                elif(result[0]== 0):
-                    # print(2)
-                    game.winner = game.team2       
+                elif (result[0] == 0):
+                    game.winner = game.team2
                     game.parent.team1 = game.team2
 
-            elif (game==game.parent.right):
-                # print('right')
-                if (result[0] == 1):                                    
-                    # print(3)
+            elif (game == game.parent.right):
+                if (result[0] == 1):
                     game.winner = game.team2
                     game.parent.team2 = game.team1
 
-                elif(result[0]== 0):
-                    # print(4)
+                elif (result[0] == 0):
                     game.winner = game.team1
                     game.parent.team2 = game.team2
 
             else:
-                # print("no parents :(")
                 pass
 
             self.reverseLevelOrder()
