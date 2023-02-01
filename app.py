@@ -32,8 +32,6 @@ import jsonpickle
 
 from dash_bootstrap_templates import load_figure_template
 
-
-
 # app = Dash(__name__)
 app = Dash(external_stylesheets=[dbc.themes.DARKLY])
 cwd = os.getcwd()
@@ -43,7 +41,8 @@ pio.renderers.deafult = "notebook"
 ## Import required data
 df_training_set = pd.read_csv('training_set.csv')
 df_training_set_stage2 = pd.read_csv("training_set_stage2.csv")
-df_stage1Combinations = pd.read_csv(cwd+"/data_stage2/MSampleSubmissionStage2.csv")
+df_stage1Combinations = pd.read_csv(cwd +
+                                    "/data_stage2/MSampleSubmissionStage2.csv")
 
 ## Create a correlation matrix for the initial heatmap graph
 
@@ -51,22 +50,22 @@ df_stage1Combinations = pd.read_csv(cwd+"/data_stage2/MSampleSubmissionStage2.cs
 # X = df[cols]
 # y = df_training_set['Result']
 
-##      
+##
 # for index, row in df_stage1Combinations.iterrows():
 #     predictionsList.append(MatchPrediction(row['ID'], row['Pred']))
 
 # ## Helper functino for generating HTML tables
 # def generate_table(dataframe, max_rows=10):
-    # return html.Table([
-    #     html.Thead(
-    #         html.Tr([html.Th(col) for col in dataframe.columns])
-    #     ),
-    #     html.Tbody([
-    #         html.Tr([
-    #             html.Td(dataframe.iloc[i][col]) for col in dataframe.columns
-    #         ]) for i in range(min(len(dataframe), max_rows))
-    #     ])
-    # ])
+# return html.Table([
+#     html.Thead(
+#         html.Tr([html.Th(col) for col in dataframe.columns])
+#     ),
+#     html.Tbody([
+#         html.Tr([
+#             html.Td(dataframe.iloc[i][col]) for col in dataframe.columns
+#         ]) for i in range(min(len(dataframe), max_rows))
+#     ])
+# ])
 
 # def initializeTournament():
 #     root = Game('R6CH')
@@ -205,7 +204,7 @@ df_stage1Combinations = pd.read_csv(cwd+"/data_stage2/MSampleSubmissionStage2.cs
 #     root.right.right.right.right.right = Game('R1Z8')
 #     root.right.right.right.right.right.parent = root.right.right.right.right
 
-#     tourn = Tournament(root)   
+#     tourn = Tournament(root)
 #     tourn.reverseLevelOrder()
 
 #     tourn.getNode('R1W5').right = Game('W12')
@@ -229,14 +228,14 @@ df_stage1Combinations = pd.read_csv(cwd+"/data_stage2/MSampleSubmissionStage2.cs
 #         tourn.getNode(i).team2 = Team(slot['WeakSeed'].values[0],slot['Team2ID'].values[0],slot['Team2Name'].values[0])
 
 #     tourn.populateTeams(df_info)
-with open('tournamentLayout.json','r') as f:
+with open('tournamentLayout.json', 'r') as f:
     jsonData = json.load(f)
 
 tourn = jsonpickle.decode(jsonData)
 tourn.populatePredictionsList(df_stage1Combinations)
 tourn.simulateTournament()
 
-    # return tourn
+# return tourn
 # fig = px.bar(df, x="deltaFGM", y="deltaBlk", barmode="group")
 # fig = sns.heatmap(correlation, vmax=.8, square=True)
 
@@ -246,13 +245,12 @@ heatmap_figure = go.Figure()
 
 heatmap_figure.add_trace(
     go.Heatmap(
-        x = ['Result'],
-        y = df_corr.index,
-        z = np.array(df_corr),
+        x=['Result'],
+        y=df_corr.index,
+        z=np.array(df_corr),
         text=df_corr.values,
         texttemplate='%{text:.2f}',
-    )
-)
+    ))
 bracket_figure = go.Figure()
 # bracket_figure.add_trace(go.Scatter(
 #     x=[-10, 0],
@@ -267,20 +265,21 @@ bracket_figure = go.Figure()
 #         family="sans serif",
 #         size=18,
 #         color="white"
-#     )    
 #     )
-# ) 
+#     )
+# )
 heatmap_figure.update_layout(template='plotly_dark')
-bracket_figure.update_layout(plot_bgcolor="#3c3c3c", showlegend=False, template='plotly_dark')
+bracket_figure.update_layout(plot_bgcolor="#3c3c3c",
+                             showlegend=False,
+                             template='plotly_dark')
 bracket_figure.update_xaxes(showticklabels=False)
-bracket_figure.update_yaxes(showticklabels=False)     
+bracket_figure.update_yaxes(showticklabels=False)
 # returnTable = dash_table.DataTable()
 # fig1.update_layout(titlewidth=400, height=1000, yaxis_nticks=len(df_corr))
 
 ############### from Forge
 
 # from src import tournament
-
 
 # cwd = os.getcwd()
 
@@ -309,15 +308,13 @@ bracket_figure.update_yaxes(showticklabels=False)
 
 # print(df_info)
 
-
-
 # fig = go.Figure()
 # fig.update_layout(width=1600, height=1000)
 
 tourn.reverseLevelOrder()
 gamesList = tourn.nodeList.copy()
-df_modelResults = pd.DataFrame(columns=['Season','Error','Accuracy'])
-data = {'Season':[2022],'Error':[0], 'Accuracy': [0]}
+# df_modelResults = pd.DataFrame(columns=['Season','Error','Accuracy'])
+data = {'Season': [2022], 'Error': [0], 'Accuracy': [0]}
 df_modelResults = pd.DataFrame(data)
 
 load_figure_template("darkly")
@@ -327,51 +324,78 @@ app.layout = html.Div([
     # Heatmap Graph
     html.Div([
         html.H2("Explore"),
-            html.Div([       
+        html.Div(
+            [
                 dcc.Graph(
                     id='o-heatmap-figure',
-                    figure = heatmap_figure,
+                    figure=heatmap_figure,
                 ),
-            ], style={'width': '80%', 'vertical-align': 'middle', 'display': 'inline-block', 'padding':'50px'}),
-
-            html.Div([
-                html.H3("Tournament Seasons to Include in Data:"),
-                dcc.RangeSlider(
+            ],
+            style={
+                'width': '80%',
+                'vertical-align': 'middle',
+                'display': 'inline-block',
+                'padding': '50px'
+            }),
+        html.Div([
+            html.H3("Tournament Seasons to Include in Data:"),
+            dcc.RangeSlider(
+                df_training_set['Season'].min(),
+                df_training_set['Season'].max(),
+                step=None,
+                value=[
                     df_training_set['Season'].min(),
-                    df_training_set['Season'].max(),
-                    step=None,
-                    value=[df_training_set['Season'].min(), df_training_set['Season'].max()],
-                    marks={str(Season): str(Season) for Season in df_training_set['Season'].unique()},
-                    id='i-season-range'            
-                )
-            ], style={'width': '100%', 'horizontal-align': 'middle'}),
-
-    ], style={'width': '30%', 'display':'inline-block'}),
-    
-
-
+                    df_training_set['Season'].max()
+                ],
+                marks={
+                    str(Season): str(Season)
+                    for Season in df_training_set['Season'].unique()
+                },
+                id='i-season-range')
+        ],
+                 style={
+                     'width': '100%',
+                     'horizontal-align': 'middle'
+                 }),
+    ],
+             style={
+                 'width': '30%',
+                 'display': 'inline-block'
+             }),
     html.Div([
         html.H2("Build"),
         html.Div([
-            dcc.Dropdown(df_training_set.columns[4:], multi=True, id='i-model-features', placeholder="Select Features to Include"),
-        ],style={'width':'50%', 'color': 'rgb(50,50,50)'}),
+            dcc.Dropdown(df_training_set.columns[4:],
+                         multi=True,
+                         id='i-model-features',
+                         placeholder="Select Features to Include"),
+        ],
+                 style={
+                     'width': '50%',
+                     'color': 'rgb(50,50,50)'
+                 }),
         html.Br(),
         html.Div([
-            dcc.RadioItems(['Linear', 'Logistic', 'Random Forest', 'Neural Net'], 'Linear', id='i-model-type'),
+            dcc.RadioItems(
+                ['Linear', 'Logistic', 'Random Forest', 'Neural Net'],
+                'Linear',
+                id='i-model-type'),
         ]),
+    ],
+             style={
+                 'width': '30%',
+                 'display': 'inline-block',
+                 'vertical-align': 'top'
+             }),
 
-    ],style={'width': '30%', 'display':'inline-block', 'vertical-align':'top'}),   
-
-    #model creation 
+    #model creation
 
     #Features
-    
-
     html.Div([
         html.H2("Test"),
         dash_table.DataTable(
-            data = df_modelResults.to_dict('records'),
-            id='o-results-table', 
+            data=df_modelResults.to_dict('records'),
+            id='o-results-table',
             style_header={
                 'backgroundColor': 'rgb(30, 30, 30)',
                 'color': 'white'
@@ -381,185 +405,222 @@ app.layout = html.Div([
                 'color': 'white'
             },
         ),
-
-        
-    ],style={'width': '25%', 'display':'inline-block', 'vertical-align':'top'}),
-    
+    ],
+             style={
+                 'width': '25%',
+                 'display': 'inline-block',
+                 'vertical-align': 'top'
+             }),
     html.Div([
         html.H2("Predict"),
-        html.Div([
-            dcc.Graph(
-                id='o-predicted-bracket',
-                figure=bracket_figure
-            )
-        ])  
-        ],style={'width': '100%', 'display':'inline-block', 'vertical-align':'top'})
-    ])
+        html.Div([dcc.Graph(id='o-predicted-bracket', figure=bracket_figure)])
+    ],
+             style={
+                 'width': '100%',
+                 'display': 'inline-block',
+                 'vertical-align': 'top'
+             })
+])
 
-@app.callback(
-    Output('o-heatmap-figure', 'figure'),
-    Output('o-results-table', 'data'),
-    Output('o-predicted-bracket','figure'),
-    Input('i-season-range', 'value'),
-    Input('i-model-type', 'value'),
-    Input('i-model-features','value'))    
+
+@app.callback(Output('o-heatmap-figure', 'figure'),
+              Output('o-results-table', 'data'),
+              Output('o-predicted-bracket', 'figure'),
+              Input('i-season-range', 'value'), Input('i-model-type', 'value'),
+              Input('i-model-features', 'value'))
 def update_output(seasonRange, modelType, modelFeatures):
     cols = modelFeatures
-    df_modelResults = pd.DataFrame(columns=['Season','Error','Accuracy'])
+    df_modelResults = pd.DataFrame(columns=['Season', 'Error', 'Accuracy'])
 
     heatmap_figure = go.Figure()
     bracket_figure = go.Figure()
-    
+
     # returnTable = dash_table.DataTable()
 
-    df_corr = df_training_set[(df_training_set['Season']>=seasonRange[0]) & (df_training_set['Season']<=seasonRange[1])].corr()
+    df_corr = df_training_set[(df_training_set['Season'] >= seasonRange[0]) & (
+        df_training_set['Season'] <= seasonRange[1])].corr()
 
     heatmap_figure.add_trace(
-    go.Heatmap(
-        x = ['Result'],
-        y = df_corr.index,
-        z = np.array(df_corr),
-        text=df_corr.values,
-        texttemplate='%{text:.2f}'
-    ))
-    heatmap_figure.update_layout(height=600,yaxis_nticks=len(df_corr))
+        go.Heatmap(x=['Result'],
+                   y=df_corr.index,
+                   z=np.array(df_corr),
+                   text=df_corr.values,
+                   texttemplate='%{text:.2f}'))
+    heatmap_figure.update_layout(height=600, yaxis_nticks=len(df_corr))
     bracket_figure.update_layout(width=1600, height=1000)
 
-    X = df_training_set[cols][(df_training_set['Season']>=seasonRange[0]) & (df_training_set['Season']<=seasonRange[1])]
-    y = df_training_set['Result'][(df_training_set['Season']>=seasonRange[0]) & (df_training_set['Season']<=seasonRange[1])]
+    X = df_training_set[cols][(df_training_set['Season'] >= seasonRange[0])
+                              & (df_training_set['Season'] <= seasonRange[1])]
+    y = df_training_set['Result'][
+        (df_training_set['Season'] >= seasonRange[0])
+        & (df_training_set['Season'] <= seasonRange[1])]
 
     if modelType == 'Random Forest':
         print('random forest')
-        RFClassifier = RandomForestClassifier(n_estimators = 1)
-        RFClassifier.fit(X,y)
+        RFClassifier = RandomForestClassifier(n_estimators=1)
+        RFClassifier.fit(X, y)
 
         X_pred = df_training_set_stage2[cols]
-        pred = RFClassifier.predict_proba(X_pred)[:,1]
-        df_stage1Combinations['Pred'] = np.round(pred,2)
+        pred = RFClassifier.predict_proba(X_pred)[:, 1]
+        df_stage1Combinations['Pred'] = np.round(pred, 2)
         # print(df_stage1Combinations)
         tourn.populatePredictionsList(df_stage1Combinations)
 
-        for year in range(seasonRange[0],seasonRange[1]):
+        for year in range(seasonRange[0], seasonRange[1]):
             if year != 2020:
-                X_test = df_training_set[df_training_set['Season'] == year][cols]
-                y_test = df_training_set[df_training_set['Season'] == year]['Result']
+                X_test = df_training_set[df_training_set['Season'] ==
+                                         year][cols]
+                y_test = df_training_set[df_training_set['Season'] ==
+                                         year]['Result']
 
                 #not sure if this should be :,1 or :,0
                 df_results = X_test
-                df_results['Prediction'] = RFClassifier.predict_proba(X_test)[:,1]
+                df_results['Prediction'] = RFClassifier.predict_proba(
+                    X_test)[:, 1]
                 df_results['Result'] = y_test
 
                 # df_results
-                
-                df_results.loc[df_results['Prediction'] > 0.9, 'Prediction']=0.99
-                df_results.loc[df_results['Prediction'] < 0.1, 'Prediction']=0.01
 
-                
-                
-                correct = df_results.loc[(df_results['Result']==0) & (df_results['Prediction']<0.5)].shape[0]
-                correct = correct + df_results.loc[(df_results['Result']==1) & (df_results['Prediction']>0.5)].shape[0]
-                
+                df_results.loc[df_results['Prediction'] > 0.9,
+                               'Prediction'] = 0.99
+                df_results.loc[df_results['Prediction'] < 0.1,
+                               'Prediction'] = 0.01
+
+                correct = df_results.loc[(df_results['Result'] == 0) & (
+                    df_results['Prediction'] < 0.5)].shape[0]
+                correct = correct + df_results.loc[
+                    (df_results['Result'] == 1)
+                    & (df_results['Prediction'] > 0.5)].shape[0]
+
                 # print("correct", correct)
                 total = df_results.shape[0]
                 # print("total", total)
                 # print("accuracy" + total)
                 # print(correct)
 
-                accuracy = correct/total
+                accuracy = correct / total
                 # print("accuracy", accuracy)
 
-                error = -np.log(1-df_results.loc[df_results['Result'] == 0]['Prediction']).mean()
+                error = -np.log(1 - df_results.loc[df_results['Result'] == 0]
+                                ['Prediction']).mean()
                 # print("error", error)
-                data = {'Season':[year],'Error':[error], 'Accuracy': [accuracy]}
+                data = {
+                    'Season': [year],
+                    'Error': [error],
+                    'Accuracy': [accuracy]
+                }
                 # print(data)
-                
+
                 # df_modelResults = df_modelResults.append(data, ignore_index=True)
 
                 df_newRow = pd.DataFrame(data)
                 # print(df_newRow)
-                df_modelResults = pd.concat([df_modelResults, df_newRow], ignore_index=True)
+                df_modelResults = pd.concat([df_modelResults, df_newRow],
+                                            ignore_index=True)
+
 
 ## Logistic
     elif modelType == 'Logistic':
         print('logistic')
         model = linear_model.LogisticRegression(solver='lbfgs')
-        model.fit(X,y)
+        model.fit(X, y)
 
         X_pred = df_training_set_stage2[cols]
-        pred = model.predict_proba(X_pred)[:,1]
-        df_stage1Combinations['Pred'] = np.round(pred,2)
+        pred = model.predict_proba(X_pred)[:, 1]
+        df_stage1Combinations['Pred'] = np.round(pred, 2)
         tourn.populatePredictionsList(df_stage1Combinations)
 
-        for year in range(seasonRange[0],seasonRange[1]):
+        for year in range(seasonRange[0], seasonRange[1]):
             if year != 2020:
-                X_test = df_training_set[df_training_set['Season'] == year][cols]
-                y_test = df_training_set[df_training_set['Season'] == year]['Result']
+                X_test = df_training_set[df_training_set['Season'] ==
+                                         year][cols]
+                y_test = df_training_set[df_training_set['Season'] ==
+                                         year]['Result']
 
                 df_results = X_test
-                df_results['Prediction'] = model.predict_proba(X_test)[:,1]
+                df_results['Prediction'] = model.predict_proba(X_test)[:, 1]
                 df_results['Result'] = y_test
-                
-                correct = df_results.loc[(df_results['Result']==0) & (df_results['Prediction']<0.5)].shape[0]
-                correct = correct + df_results.loc[(df_results['Result']==1) & (df_results['Prediction']>0.5)].shape[0]
+
+                correct = df_results.loc[(df_results['Result'] == 0) & (
+                    df_results['Prediction'] < 0.5)].shape[0]
+                correct = correct + df_results.loc[
+                    (df_results['Result'] == 1)
+                    & (df_results['Prediction'] > 0.5)].shape[0]
 
                 total = df_results.shape[0]
 
-                accuracy = correct/total
+                accuracy = correct / total
 
-                df_results.loc[df_results['Prediction'] > 0.9, 'Prediction']=0.99
-                df_results.loc[df_results['Prediction'] < 0.1, 'Prediction']=0.01
+                df_results.loc[df_results['Prediction'] > 0.9,
+                               'Prediction'] = 0.99
+                df_results.loc[df_results['Prediction'] < 0.1,
+                               'Prediction'] = 0.01
 
-                error = -np.log(1-df_results.loc[df_results['Result'] == 0]['Prediction']).mean()
-                data = {'Season':[year],'Error':[error], 'Accuracy': [accuracy]}
+                error = -np.log(1 - df_results.loc[df_results['Result'] == 0]
+                                ['Prediction']).mean()
+                data = {
+                    'Season': [year],
+                    'Error': [error],
+                    'Accuracy': [accuracy]
+                }
                 print(data)
                 df_newRow = pd.DataFrame(data)
-                df_modelResults = pd.concat([df_modelResults, df_newRow], ignore_index=True)
+                df_modelResults = pd.concat([df_modelResults, df_newRow],
+                                            ignore_index=True)
 
     elif modelType == 'Linear':
         print('linear')
         linearModel = linear_model.LinearRegression()
-        linearModel.fit(X,y)
-        
+        linearModel.fit(X, y)
+
         X_pred = df_training_set_stage2[cols]
         pred = linearModel.predict(X_pred)
-        df_stage1Combinations['Pred'] = np.round(pred,2)
+        df_stage1Combinations['Pred'] = np.round(pred, 2)
         # print(df_stage1Combinations)
         tourn.populatePredictionsList(df_stage1Combinations)
 
         #test the model
-        for year in range(seasonRange[0],seasonRange[1]):
+        for year in range(seasonRange[0], seasonRange[1]):
             if year != 2020:
-                X_test = df_training_set[df_training_set['Season'] == year][cols]
-                y_test = df_training_set[df_training_set['Season'] == year]['Result']
+                X_test = df_training_set[df_training_set['Season'] ==
+                                         year][cols]
+                y_test = df_training_set[df_training_set['Season'] ==
+                                         year]['Result']
 
                 df_results = X_test
                 df_results['Prediction'] = linearModel.predict(X_test)
                 df_results['Result'] = y_test
-                
-                correct = df_results.loc[(df_results['Result']==0) & (df_results['Prediction']<0.5)].shape[0]
-                correct = correct + df_results.loc[(df_results['Result']==1) & (df_results['Prediction']>0.5)].shape[0]
+
+                correct = df_results.loc[(df_results['Result'] == 0) & (
+                    df_results['Prediction'] < 0.5)].shape[0]
+                correct = correct + df_results.loc[
+                    (df_results['Result'] == 1)
+                    & (df_results['Prediction'] > 0.5)].shape[0]
 
                 total = df_results.shape[0]
 
-                accuracy = correct/total
+                accuracy = correct / total
                 # print("correct", correct)
                 # print("total", total)
                 # print("accuracy", accuracy)
 
-                error = -np.log(1-df_results.loc[df_results['Result'] == 0]['Prediction']).mean()
-                data = {'Season':[year],'Error':[error], 'Accuracy': [accuracy]}
+                error = -np.log(1 - df_results.loc[df_results['Result'] == 0]
+                                ['Prediction']).mean()
+                data = {
+                    'Season': [year],
+                    'Error': [error],
+                    'Accuracy': [accuracy]
+                }
                 # print(data)
-                
+
                 # df_modelResults = df_modelResults.append(data, ignore_index=True)
 
                 df_newRow = pd.DataFrame(data)
-                df_modelResults = pd.concat([df_modelResults, df_newRow], ignore_index=True)
+                df_modelResults = pd.concat([df_modelResults, df_newRow],
+                                            ignore_index=True)
 
     print("made it here1")
 
-
-    
-    
     tourn.simulateTournament()
     tourn.reverseLevelOrder()
     gamesList = tourn.nodeList.copy()
@@ -570,68 +631,62 @@ def update_output(seasonRange, modelType, modelFeatures):
 
     def bintree_level(node, levels, x, y, width, side):
         segments = []
-        if side=='left':
+        if side == 'left':
             xl = x - depth_dist
             xr = x - depth_dist
             textPosition = "top left"
-        elif side=='right':
+        elif side == 'right':
             xl = x + depth_dist
             xr = x + depth_dist
             textPosition = "top right"
 
         yr = y + width / 2
         yl = y - width / 2
-        
-        # print team1 
-        bracket_figure.add_trace(go.Scatter(
-        x=[x, xl],
-        y=[yl, yl],
-        mode="lines+text",
-        line_color="white",
-        name="Lines and Text",
-        text=[node.value + " " + str(node.winPct) + " " + node.team1.getString()],
-    #     text
-        textposition=textPosition,
-        textfont=dict(
-            family="sans serif",
-            size=10,
-            color="white"
-        )    
-        )
-        )
-        
+
+        # print team1
+        bracket_figure.add_trace(
+            go.Scatter(
+                x=[x, xl],
+                y=[yl, yl],
+                mode="lines+text",
+                line_color="white",
+                name="Lines and Text",
+                text=[
+                    node.value + " " + str(node.winPct) + " " +
+                    node.team1.getString()
+                ],
+                #     text
+                textposition=textPosition,
+                textfont=dict(family="sans serif", size=10, color="white")))
+
         # print team2
-        bracket_figure.add_trace(go.Scatter(
-        x=[x, xr],
-        y=[yr, yr],
-        mode="lines+text",
-        line_color="white",
-        name="Lines and Text",
-        textposition=textPosition,
-        text=[node.value + " " + node.team2.getString()],
-    #     text=['team2'],
-        textfont=dict(
-            family="sans serif",
-            size=10,
-            color="white"
-        )
-        )
-        )
-        
+        bracket_figure.add_trace(
+            go.Scatter(
+                x=[x, xr],
+                y=[yr, yr],
+                mode="lines+text",
+                line_color="white",
+                name="Lines and Text",
+                textposition=textPosition,
+                text=[node.value + " " + node.team2.getString()],
+                #     text=['team2'],
+                textfont=dict(family="sans serif", size=10, color="white")))
+
         # print line connecting team1 and team 2
-        bracket_figure.add_trace(go.Scatter(
-        x=[x,x],
-        y=[yl, yr],
-        mode="lines",
-        line_color="white",
-        ))
-        
+        bracket_figure.add_trace(
+            go.Scatter(
+                x=[x, x],
+                y=[yl, yr],
+                mode="lines",
+                line_color="white",
+            ))
+
         #recursively call this function
         if levels > 2:
             # print(levels)
             bintree_level(node.left, levels - 1, xl, yl, width / 2, side)
-            bintree_level(node.right, levels - 1, xr, yr, width  / 2, side)
-            
+            bintree_level(node.right, levels - 1, xr, yr, width / 2, side)
+
         # recursion base condition
         if levels == 1:
             # print("yes")
@@ -639,72 +694,70 @@ def update_output(seasonRange, modelType, modelFeatures):
 
     node1 = tourn.root.left
     node2 = tourn.root.right
-    bintree_level(node1,levels,-10,0,width_dist,'left')
-    bintree_level(node2,levels,10,0,width_dist,'right')
+    bintree_level(node1, levels, -10, 0, width_dist, 'left')
+    bintree_level(node2, levels, 10, 0, width_dist, 'right')
 
     #final right
-    bracket_figure.add_trace(go.Scatter(
-        x=[0, 10],
-        y=[-4, -4],
-        mode="lines+text",
-        line_color="white",
-        name="Lines and Text",
-        text=[tourn.root.left.value + " " + str(tourn.root.left.winPct) + " " + tourn.root.team2.getString()],
-        #     text
-        textposition="top right",
-        textfont=dict(
-            family="sans serif",
-            size=10,
-            color="white"
-        )    
-    )
-    )  
+    bracket_figure.add_trace(
+        go.Scatter(
+            x=[0, 10],
+            y=[-4, -4],
+            mode="lines+text",
+            line_color="white",
+            name="Lines and Text",
+            text=[
+                tourn.root.left.value + " " + str(tourn.root.left.winPct) +
+                " " + tourn.root.team2.getString()
+            ],
+            #     text
+            textposition="top right",
+            textfont=dict(family="sans serif", size=10, color="white")))
 
     #final left
-    bracket_figure.add_trace(go.Scatter(
-        x=[-10, 0],
-        y=[4, 4],
-        mode="lines+text",
-        line_color="white",
-        name="Lines and Text",
-        text=[tourn.root.left.value + " " + str(tourn.root.left.winPct) + " " + tourn.root.team1.getString()],
-        #     text
-        textposition="top right",
-        textfont=dict(
-            family="sans serif",
-            size=10,
-            color="white"
-        )    
-        )
-    ) 
+    bracket_figure.add_trace(
+        go.Scatter(
+            x=[-10, 0],
+            y=[4, 4],
+            mode="lines+text",
+            line_color="white",
+            name="Lines and Text",
+            text=[
+                tourn.root.left.value + " " + str(tourn.root.left.winPct) +
+                " " + tourn.root.team1.getString()
+            ],
+            #     text
+            textposition="top right",
+            textfont=dict(family="sans serif", size=10, color="white")))
 
-    bracket_figure.add_trace(go.Scatter(
-        x=[-8, 8],
-        y=[0, 0],
-        mode="lines+text",
-        line_color="white",
-        name="Lines and Text",
-        text=[tourn.root.left.value + " " + str(tourn.root.winPct) + " " + tourn.root.winner.getString()],
-        #     text
-        textposition="top right",
-        textfont=dict(
-            family="sans serif",
-            size=10,
-            color="white"
-        )    
-        )
-    ) 
-# paper_bgcolor="grey"
+    bracket_figure.add_trace(
+        go.Scatter(
+            x=[-8, 8],
+            y=[0, 0],
+            mode="lines+text",
+            line_color="white",
+            name="Lines and Text",
+            text=[
+                tourn.root.left.value + " " + str(tourn.root.winPct) + " " +
+                tourn.root.winner.getString()
+            ],
+            #     text
+            textposition="top right",
+            textfont=dict(family="sans serif", size=10, color="white")))
+    # paper_bgcolor="grey"
     bracket_figure.update_layout(plot_bgcolor="#3c3c3c", showlegend=False)
-    bracket_figure.update_xaxes(showticklabels=False, showgrid=False, zeroline=False)
-    bracket_figure.update_yaxes(showticklabels=False, showgrid=False, zeroline=False)            
+    bracket_figure.update_xaxes(showticklabels=False,
+                                showgrid=False,
+                                zeroline=False)
+    bracket_figure.update_yaxes(showticklabels=False,
+                                showgrid=False,
+                                zeroline=False)
 
     print("made it here 2")
-    
+
     # print(df_modelResults)
 
     # returnTable = dash_table.DataTable(
-    #     data=df_modelResults.to_dict('records'), 
+    #     data=df_modelResults.to_dict('records'),
     #     columns=[{"name": i, "id": i} for i in df_modelResults.columns]
     # )
 
@@ -715,7 +768,6 @@ def update_output(seasonRange, modelType, modelFeatures):
     return heatmap_figure, resultsData, bracket_figure
     # return heatmap_figure
     # return bracket_figure
-
 
 if __name__ == '__main__':
     app.run_server(debug=True)
