@@ -1,38 +1,40 @@
+import os
+from itertools import cycle
+import json
+import jsonpickle
+
 from dash import Dash, dcc, html, Input, Output, dash_table
-import pandas as pd
+import dash_bootstrap_components as dbc
+from dash_bootstrap_templates import load_figure_template
 import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
-from sklearn import linear_model
-import numpy as np
 import plotly.graph_objects as go
-import dash_bootstrap_components as dbc
+import plotly.io as pio
+import pandas as pd
+import numpy as np
 
+from sklearn import linear_model
 from sklearn.ensemble import RandomForestClassifier
 
 # from src.team import Team
 from src.tournament import Tournament
 from src.matchPrediction import MatchPrediction
-import os
-
-import plotly.express as px
-import plotly.graph_objects as go
-import pandas as pd
-import os
-import numpy as np
-import plotly.io as pio
-from itertools import cycle
-
 from src.game import Game
 from src.team import Team
-from src.tournament import Tournament
+"""_summary_
+This app requires 
+training_set.csv
+training_set_stage2.csv
+/data_stage2/MSampleSubmissionStage2.csv
 
-import json
-import jsonpickle
+a pre-loaded tournamentLayout.json file
 
-from dash_bootstrap_templates import load_figure_template
-
-# app = Dash(__name__)
+Returns
+-------
+_type_
+    _description_
+    """
 app = Dash(external_stylesheets=[dbc.themes.DARKLY])
 cwd = os.getcwd()
 
@@ -44,205 +46,21 @@ df_training_set_stage2 = pd.read_csv("training_set_stage2.csv")
 df_stage1Combinations = pd.read_csv(cwd +
                                     "/data_stage2/MSampleSubmissionStage2.csv")
 
-## Create a correlation matrix for the initial heatmap graph
-
-# cols = ['deltaSeed', 'deltaWinPct', 'deltaPointsFor', 'deltaFGM', 'deltaAst', 'deltaBlk']
-# X = df[cols]
-# y = df_training_set['Result']
-
-##
-# for index, row in df_stage1Combinations.iterrows():
-#     predictionsList.append(MatchPrediction(row['ID'], row['Pred']))
-
-# ## Helper functino for generating HTML tables
-# def generate_table(dataframe, max_rows=10):
-# return html.Table([
-#     html.Thead(
-#         html.Tr([html.Th(col) for col in dataframe.columns])
-#     ),
-#     html.Tbody([
-#         html.Tr([
-#             html.Td(dataframe.iloc[i][col]) for col in dataframe.columns
-#         ]) for i in range(min(len(dataframe), max_rows))
-#     ])
-# ])
-
-# def initializeTournament():
-#     root = Game('R6CH')
-#     root.left = Game('R5WX')
-#     root.left.parent = root
-#     root.right = Game('R5YZ')
-#     root.right.parent = root
-
-#     root.left.left = Game('R4W1')
-#     root.left.left.parent = root.left
-#     root.left.right = Game('R4X1')
-#     root.left.right.parent = root.left
-#     root.right.left = Game('R4Y1')
-#     root.right.left.parent = root.right
-#     root.right.right = Game('R4Z1')
-#     root.right.right.parent = root.right
-
-#     root.left.left.left = Game('R3W1')
-#     root.left.left.left.parent = root.left.left
-#     root.left.left.right = Game('R3W2')
-#     root.left.left.right.parent = root.left.left
-#     root.left.right.left = Game('R3X1')
-#     root.left.right.left.parent = root.left.right
-#     root.left.right.right = Game('R3X2')
-#     root.left.right.right.parent = root.left.right
-#     root.right.left.left = Game('R3Y1')
-#     root.right.left.left.parent = root.right.left
-#     root.right.left.right = Game('R3Y2')
-#     root.right.left.right.parent = root.right.left
-#     root.right.right.left = Game('R3Z1')
-#     root.right.right.left.parent = root.right.right
-#     root.right.right.right = Game('R3Z2')
-#     root.right.right.right.parent = root.right.right
-
-#     root.left.left.left.left = Game('R2W1')
-#     root.left.left.left.left.parent = root.left.left.left
-#     root.left.left.left.right = Game('R2W2')
-#     root.left.left.left.right.parent = root.left.left.left
-#     root.left.left.right.left = Game('R2W3')
-#     root.left.left.right.left.parent = root.left.left.right
-#     root.left.left.right.right = Game('R2W4')
-#     root.left.left.right.right.parent = root.left.left.right
-
-#     root.left.right.left.left = Game('R2X1')
-#     root.left.right.left.left.parent = root.left.right.left
-#     root.left.right.left.right = Game('R2X2')
-#     root.left.right.left.right.parent = root.left.right.left
-#     root.left.right.right.left = Game('R2X3')
-#     root.left.right.right.left.parent = root.left.right.right
-#     root.left.right.right.right = Game('R2X4')
-#     root.left.right.right.right.parent = root.left.right.right
-
-#     root.right.left.left.left = Game('R2Y1')
-#     root.right.left.left.left.parent = root.right.left.left
-#     root.right.left.left.right = Game('R2Y2')
-#     root.right.left.left.right.parent = root.right.left.left
-#     root.right.left.right.left = Game('R2Y3')
-#     root.right.left.right.left.parent = root.right.left.right
-#     root.right.left.right.right = Game('R2Y4')
-#     root.right.left.right.right.parent = root.right.left.right
-
-#     root.right.right.left.left = Game('R2Z1')
-#     root.right.right.left.left.parent = root.right.right.left
-#     root.right.right.left.right = Game('R2Z2')
-#     root.right.right.left.right.parent = root.right.right.left
-#     root.right.right.right.left = Game('R2Z3')
-#     root.right.right.right.left.parent = root.right.right.right
-#     root.right.right.right.right = Game('R2Z4')
-#     root.right.right.right.right.parent = root.right.right.right
-
-#     root.left.left.left.left.left = Game('R1W1')
-#     root.left.left.left.left.left.parent = root.left.left.left.left
-#     root.left.left.left.left.right = Game('R1W2')
-#     root.left.left.left.left.right.parent = root.left.left.left.left
-#     root.left.left.left.right.left = Game('R1W3')
-#     root.left.left.left.right.left.parent = root.left.left.left.right
-#     root.left.left.left.right.right = Game('R1W4')
-#     root.left.left.left.right.right.parent = root.left.left.left.right
-#     root.left.left.right.left.left = Game('R1W5')
-#     root.left.left.right.left.left.parent = root.left.left.right.left
-#     root.left.left.right.left.right = Game('R1W6')
-#     root.left.left.right.left.right.parent = root.left.left.right.left
-#     root.left.left.right.right.left = Game('R1W7')
-#     root.left.left.right.right.left.parent = root.left.left.right.right
-#     root.left.left.right.right.right = Game('R1W8')
-#     root.left.left.right.right.right.parent = root.left.left.right.right
-
-#     root.left.right.left.left.left = Game('R1X1')
-#     root.left.right.left.left.left.parent = root.left.right.left.left
-#     root.left.right.left.left.right = Game('R1X2')
-#     root.left.right.left.left.right.parent = root.left.right.left.left
-#     root.left.right.left.right.left = Game('R1X3')
-#     root.left.right.left.right.left.parent = root.left.right.left.right
-#     root.left.right.left.right.right= Game('R1X4')
-#     root.left.right.left.right.right.parent = root.left.right.left.right
-#     root.left.right.right.left.left = Game('R1X5')
-#     root.left.right.right.left.left.parent = root.left.right.right.left
-#     root.left.right.right.left.right= Game('R1X6')
-#     root.left.right.right.left.right.parent = root.left.right.right.left
-#     root.left.right.right.right.left = Game('R1X7')
-#     root.left.right.right.right.left.parent = root.left.right.right.right
-#     root.left.right.right.right.right = Game('R1X8')
-#     root.left.right.right.right.right.parent = root.left.right.right.right
-
-#     root.right.left.left.left.left = Game('R1Y1')
-#     root.right.left.left.left.left.parent = root.right.left.left.left
-#     root.right.left.left.left.right = Game('R1Y2')
-#     root.right.left.left.left.right.parent = root.right.left.left.left
-#     root.right.left.left.right.left = Game('R1Y3')
-#     root.right.left.left.right.left.parent = root.right.left.left.right
-#     root.right.left.left.right.right = Game('R1Y4')
-#     root.right.left.left.right.right.parent = root.right.left.left.right
-#     root.right.left.right.left.left = Game('R1Y5')
-#     root.right.left.right.left.left.parent = root.right.left.right.left
-#     root.right.left.right.left.right = Game('R1Y6')
-#     root.right.left.right.left.right.parent = root.right.left.right.left
-#     root.right.left.right.right.left = Game('R1Y7')
-#     root.right.left.right.right.left.parent = root.right.left.right.right
-#     root.right.left.right.right.right = Game('R1Y8')
-#     root.right.left.right.right.right.parent = root.right.left.right.right
-
-#     root.right.right.left.left.left = Game('R1Z1')
-#     root.right.right.left.left.left.parent = root.right.right.left.left
-#     root.right.right.left.left.right = Game('R1Z2')
-#     root.right.right.left.left.right.parent = root.right.right.left.left
-#     root.right.right.left.right.left = Game('R1X3')
-#     root.right.right.left.right.left.parent = root.right.right.left.right
-#     root.right.right.left.right.right = Game('R1Z4')
-#     root.right.right.left.right.right.parent = root.right.right.left.right
-#     root.right.right.right.left.left = Game('R1Z5')
-#     root.right.right.right.left.left.parent = root.right.right.right.left
-#     root.right.right.right.left.right = Game('R1Z6')
-#     root.right.right.right.left.right.parent = root.right.right.right.left
-#     root.right.right.right.right.left = Game('R1Z7')
-#     root.right.right.right.right.left.parent = root.right.right.right.right
-#     root.right.right.right.right.right = Game('R1Z8')
-#     root.right.right.right.right.right.parent = root.right.right.right.right
-
-#     tourn = Tournament(root)
-#     tourn.reverseLevelOrder()
-
-#     tourn.getNode('R1W5').right = Game('W12')
-#     tourn.getNode('R1W5').right.parent = tourn.getNode('R1W5')
-#     tourn.getNode('R1X6').right = Game('X11')
-#     tourn.getNode('R1X6').right.parent = tourn.getNode('R1X6')
-#     tourn.getNode('R1Y1').right = Game('Y16')
-#     tourn.getNode('R1Y1').right.parent = tourn.getNode('R1Y1')
-#     tourn.getNode('R1Z1').right = Game('Z16')
-#     tourn.getNode('R1Z1').right.parent = tourn.getNode('R1Z1')
-
-#     tourn.reverseLevelOrder()
-
-#     preRound1Slots = ['W12','X11','Y16','Z16']
-#     cycleList = cycle(preRound1Slots)
-
-#     for x in range(3):
-#         i = next(cycleList)
-#         slot = df_info[df_info['Slot']==i]
-#         tourn.getNode(i).team1 = Team(slot['StrongSeed'].values[0],slot['Team1ID'].values[0],slot['Team1Name'].values[0])
-#         tourn.getNode(i).team2 = Team(slot['WeakSeed'].values[0],slot['Team2ID'].values[0],slot['Team2Name'].values[0])
-
-#     tourn.populateTeams(df_info)
+# Open the pre-populated tournament layout JSON file
 with open('tournamentLayout.json', 'r') as f:
     jsonData = json.load(f)
 
 tourn = jsonpickle.decode(jsonData)
-tourn.populatePredictionsList(df_stage1Combinations)
-tourn.simulateTournament()
 
-# return tourn
-# fig = px.bar(df, x="deltaFGM", y="deltaBlk", barmode="group")
-# fig = sns.heatmap(correlation, vmax=.8, square=True)
+# populate the tournament predictions list
+tourn.populatePredictionsList(df_stage1Combinations)
+
+# simluate the tournament
+tourn.simulateTournament()
 
 # Create the initial heatmap figure
 df_corr = df_training_set.corr()
 heatmap_figure = go.Figure()
-
 heatmap_figure.add_trace(
     go.Heatmap(
         x=['Result'],
@@ -251,75 +69,25 @@ heatmap_figure.add_trace(
         text=df_corr.values,
         texttemplate='%{text:.2f}',
     ))
-bracket_figure = go.Figure()
-# bracket_figure.add_trace(go.Scatter(
-#     x=[-10, 0],
-#     y=[4, 4],
-#     mode="lines+text",
-#     line_color="white",
-#     name="Lines and Text",
-#     # text=[tourn.root.right.value, tourn.root.team2.getString()],
-#     #     text
-#     textposition="top left",
-#     textfont=dict(
-#         family="sans serif",
-#         size=18,
-#         color="white"
-#     )
-#     )
-# )
+
 heatmap_figure.update_layout(template='plotly_dark')
+
+# Create the initial bracket figure
+bracket_figure = go.Figure()
 bracket_figure.update_layout(plot_bgcolor="#3c3c3c",
                              showlegend=False,
                              template='plotly_dark')
 bracket_figure.update_xaxes(showticklabels=False)
 bracket_figure.update_yaxes(showticklabels=False)
-# returnTable = dash_table.DataTable()
-# fig1.update_layout(titlewidth=400, height=1000, yaxis_nticks=len(df_corr))
 
-############### from Forge
-
-# from src import tournament
-
-# cwd = os.getcwd()
-
-# season = 2022
-
-# slotcsv = cwd+"\\data_stage2\\MNCAATourneySlots.csv"
-# seedcsv = cwd+"\\data_stage2\\MNCAATourneySeeds.csv"
-# namecsv = cwd+"\\data_stage2\\MTeams.csv"
-# predictionscsv = cwd+"\\data_stage2\\MSampleSubmissionStage2.csv"
-
-# df_slots = pd.read_csv(slotcsv)
-# df_slots = df_slots[df_slots["Season"]==season]
-
-# df_seeds = pd.read_csv(seedcsv)
-# df_seeds = df_seeds[df_seeds["Season"]==season]
-
-# df_names = pd.read_csv(namecsv)
-
-# df_stage1Combinations = pd.read_csv(predictionscsv)
-# # tourn.populatePredictionsList()
-# df_comb = df_seeds.merge(df_names[['TeamID','TeamName']], left_on = 'TeamID', right_on='TeamID')[['Seed','TeamID','TeamName']]
-# df_comb2 = df_slots.merge(df_comb, left_on="StrongSeed", right_on="Seed")[['Slot','StrongSeed','WeakSeed','TeamID','TeamName',]]
-# df_comb2 = df_comb2.rename(columns={'TeamID':'Team1ID', 'TeamName':'Team1Name'})
-# df_comb3 = df_comb2.merge(df_comb, how='left',left_on="WeakSeed", right_on="Seed")[['Slot','StrongSeed','WeakSeed','Team1ID','Team1Name','TeamID','TeamName',]]
-# df_info = df_comb3.rename(columns={'TeamID':'Team2ID', 'TeamName':'Team2Name'})
-
-# print(df_info)
-
-# fig = go.Figure()
-# fig.update_layout(width=1600, height=1000)
-
-tourn.reverseLevelOrder()
-gamesList = tourn.nodeList.copy()
-# df_modelResults = pd.DataFrame(columns=['Season','Error','Accuracy'])
+# initialize a pandas dataframe to display the results of testing
 data = {'Season': [2022], 'Error': [0], 'Accuracy': [0]}
 df_modelResults = pd.DataFrame(data)
 
 load_figure_template("darkly")
-#################
+################# app.layout
 app.layout = html.Div([
+    # Header
     html.H1("March Madness Machine Learning"),
     # Heatmap Graph
     html.Div([
@@ -389,7 +157,6 @@ app.layout = html.Div([
              }),
 
     #model creation
-
     #Features
     html.Div([
         html.H2("Test"),
@@ -429,13 +196,23 @@ app.layout = html.Div([
               Input('i-season-range', 'value'), Input('i-model-type', 'value'),
               Input('i-model-features', 'value'))
 def update_output(seasonRange, modelType, modelFeatures):
-    cols = modelFeatures
-    df_modelResults = pd.DataFrame(columns=['Season', 'Error', 'Accuracy'])
+    """_summary_
 
+    Parameters
+    ----------
+    seasonRange : _type_
+        _description_
+    modelType : _type_
+        _description_
+    modelFeatures : _type_
+        _description_
+    """
+    cols = modelFeatures
+
+    #clear the existing return variables
+    df_modelResults = pd.DataFrame(columns=['Season', 'Error', 'Accuracy'])
     heatmap_figure = go.Figure()
     bracket_figure = go.Figure()
-
-    # returnTable = dash_table.DataTable()
 
     df_corr = df_training_set[(df_training_set['Season'] >= seasonRange[0]) & (
         df_training_set['Season'] <= seasonRange[1])].corr()
@@ -463,7 +240,6 @@ def update_output(seasonRange, modelType, modelFeatures):
         X_pred = df_training_set_stage2[cols]
         pred = RFClassifier.predict_proba(X_pred)[:, 1]
         df_stage1Combinations['Pred'] = np.round(pred, 2)
-        # print(df_stage1Combinations)
         tourn.populatePredictionsList(df_stage1Combinations)
 
         for year in range(seasonRange[0], seasonRange[1]):
@@ -498,11 +274,12 @@ def update_output(seasonRange, modelType, modelFeatures):
                 # print("accuracy" + total)
                 # print(correct)
 
-                accuracy = correct / total
+                accuracy = round(correct / total, 2)
                 # print("accuracy", accuracy)
 
-                error = -np.log(1 - df_results.loc[df_results['Result'] == 0]
-                                ['Prediction']).mean()
+                error = round(
+                    -np.log(1 - df_results.loc[df_results['Result'] == 0]
+                            ['Prediction']).mean(), 2)
                 # print("error", error)
                 data = {
                     'Season': [year],
@@ -549,15 +326,16 @@ def update_output(seasonRange, modelType, modelFeatures):
 
                 total = df_results.shape[0]
 
-                accuracy = correct / total
+                accuracy = round(correct / total, 2)
 
                 df_results.loc[df_results['Prediction'] > 0.9,
                                'Prediction'] = 0.99
                 df_results.loc[df_results['Prediction'] < 0.1,
                                'Prediction'] = 0.01
 
-                error = -np.log(1 - df_results.loc[df_results['Result'] == 0]
-                                ['Prediction']).mean()
+                error = round(
+                    -np.log(1 - df_results.loc[df_results['Result'] == 0]
+                            ['Prediction']).mean(), 2)
                 data = {
                     'Season': [year],
                     'Error': [error],
@@ -599,13 +377,14 @@ def update_output(seasonRange, modelType, modelFeatures):
 
                 total = df_results.shape[0]
 
-                accuracy = correct / total
+                accuracy = round(correct / total, 2)
                 # print("correct", correct)
                 # print("total", total)
                 # print("accuracy", accuracy)
 
-                error = -np.log(1 - df_results.loc[df_results['Result'] == 0]
-                                ['Prediction']).mean()
+                error = round(
+                    -np.log(1 - df_results.loc[df_results['Result'] == 0]
+                            ['Prediction']).mean(), 2)
                 data = {
                     'Season': [year],
                     'Error': [error],
@@ -622,8 +401,6 @@ def update_output(seasonRange, modelType, modelFeatures):
     print("made it here1")
 
     tourn.simulateTournament()
-    tourn.reverseLevelOrder()
-    gamesList = tourn.nodeList.copy()
 
     width_dist = 10
     depth_dist = 10
@@ -697,7 +474,7 @@ def update_output(seasonRange, modelType, modelFeatures):
     bintree_level(node1, levels, -10, 0, width_dist, 'left')
     bintree_level(node2, levels, 10, 0, width_dist, 'right')
 
-    #final right
+    #print final right
     bracket_figure.add_trace(
         go.Scatter(
             x=[0, 10],
@@ -713,7 +490,7 @@ def update_output(seasonRange, modelType, modelFeatures):
             textposition="top right",
             textfont=dict(family="sans serif", size=10, color="white")))
 
-    #final left
+    #print final left
     bracket_figure.add_trace(
         go.Scatter(
             x=[-10, 0],
@@ -729,6 +506,7 @@ def update_output(seasonRange, modelType, modelFeatures):
             textposition="top right",
             textfont=dict(family="sans serif", size=10, color="white")))
 
+    # print final winner
     bracket_figure.add_trace(
         go.Scatter(
             x=[-8, 8],
@@ -752,22 +530,10 @@ def update_output(seasonRange, modelType, modelFeatures):
                                 showgrid=False,
                                 zeroline=False)
 
-    print("made it here 2")
-
-    # print(df_modelResults)
-
-    # returnTable = dash_table.DataTable(
-    #     data=df_modelResults.to_dict('records'),
-    #     columns=[{"name": i, "id": i} for i in df_modelResults.columns]
-    # )
-
+    # store the results to the df_modelResults which is tied to the table
     resultsData = df_modelResults.to_dict('records')
 
-    # print('bracket')
-    # print(bracket_figure)
     return heatmap_figure, resultsData, bracket_figure
-    # return heatmap_figure
-    # return bracket_figure
 
 if __name__ == '__main__':
     app.run_server(debug=True)

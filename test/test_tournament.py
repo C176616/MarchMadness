@@ -59,15 +59,24 @@ def test_getNode(setup):
 
 
 def test_populateTeams(setup):
-    df_info = pd.DataFrame({
-        'Slot': ['R1W1'],
-        'StrongSeed': ['W1'],
-        'WeakSeed': ['W16'],
-        'Team1ID': [1135],
-        'Team1Name': ['Rose Hulman'],
-        'Team2ID': [1136],
-        'Team2Name': ['Purdue']
-    })
+    df_info = pd.DataFrame(
+        {
+            'Slot': ['R1W1'],
+            'StrongSeed': ['W1'],
+            'WeakSeed': ['W16'],
+            'Team1ID': [1135],
+            'Team1Name': ['Rose Hulman'],
+            'Team2ID': [1136],
+            'Team2Name': ['Purdue']
+        }, {
+            'Slot': ['R4X1'],
+            'StrongSeed': ['X1'],
+            'WeakSeed': ['X16'],
+            'Team1ID': [1137],
+            'Team1Name': ['ISU'],
+            'Team2ID': [1138],
+            'Team2Name': ['Notre Dame']
+        })
 
     setup.populateTeams(df_info)
     assert (setup.getNode('R1W1').team1.teamID == 1135)
@@ -111,27 +120,86 @@ def test_getMatchPrediction(setup):
 
 
 def test_simulateTournament(setup):
-    df_info = pd.DataFrame({
-        'Slot': ['R1W1'],
-        'StrongSeed': ['W1'],
-        'WeakSeed': ['W16'],
-        'Team1ID': [1135],
-        'Team1Name': ['Rose Hulman'],
-        'Team2ID': [1136],
-        'Team2Name': ['Purdue']
-    })
+    #     {
+    #     'Slot': ['R1W1'],
+    #     'StrongSeed': ['W1'],
+    #     'WeakSeed': ['W16'],
+    #     'Team1ID': [1135],
+    #     'Team1Name': ['Rose Hulman'],
+    #     'Team2ID': [1136],
+    #     'Team2Name': ['Purdue']
+    # }, {
+    #     'Slot': ['R4X1'],
+    #     'StrongSeed': ['X1'],
+    #     'WeakSeed': ['X16'],
+    #     'Team1ID': [1137],
+    #     'Team1Name': ['ISU'],
+    #     'Team2ID': [1138],
+    #     'Team2Name': ['Notre Dame']
+    # })
+    # dict = {'Slot':["R1W1",'R4X1', R4Y1]}
+    df_info = pd.DataFrame([{
+        'Slot': 'R1W1',
+        'StrongSeed': 'W1',
+        'WeakSeed': 'W16',
+        'Team1ID': 1135,
+        'Team1Name': 'Rose Hulman',
+        'Team2ID': 1136,
+        'Team2Name': 'Purdue'
+        # }, {
+        #     'Slot': 'R4X1',
+        #     'StrongSeed': 'X1',
+        #     'WeakSeed': 'X16',
+        #     'Team1ID': 1137,
+        #     'Team1Name': 'ISU',
+        #     'Team2ID': 1138,
+        #     'Team2Name': 'Notre Dame'
+        # }, {
+        #     'Slot': 'R4Y1',
+        #     'StrongSeed': 'Y1',
+        #     'WeakSeed': 'Y16',
+        #     'Team1ID': 1139,
+        #     'Team1Name': 'USI',
+        #     'Team2ID': 1140,
+        #     'Team2Name': 'UE'
+        # }, {
+        #     'Slot': 'R4Z1',
+        #     'StrongSeed': 'Z1',
+        #     'WeakSeed': 'Z16',
+        #     'Team1ID': 1141,
+        #     'Team1Name': 'Ivy Tech',
+        #     'Team2ID': 1142,
+        #     'Team2Name': 'Ball State'
+    }])
+    print(df_info)
 
     setup.populateTeams(df_info)
+    setup.getNode('R4W1').team2 = Team('R1W1', 1143, 'Valpo')
 
-    df_stage1Combinations = pd.DataFrame({
-        'ID': ['2022_1136_1135'],
-        'Pred': [0.05]
-    })
+    setup.getNode('R4X1').team1 = Team('X1', 1137, 'ISU')
+    setup.getNode('R4X1').team2 = Team('X16', 1138, 'ND')
+
+    setup.getNode('R4Y1').team1 = Team('Y1', 1139, 'USI')
+    setup.getNode('R4Y1').team2 = Team('Y16', 1140, 'UE')
+
+    setup.getNode('R4Z1').team1 = Team('Z1', 1141, 'IVY Tech')
+    setup.getNode('R4Z1').team2 = Team('Z16', 1142, 'Ball State')
+
+    df_stage1Combinations = pd.DataFrame(columns=['ID', 'Pred'])
+    for i in range(1134, 1144):
+        for j in range(1134, 1144):
+            data = {'ID': ['2022_' + str(i) + '_' + str(j)], 'Pred': [0.5]}
+            df_newRow = pd.DataFrame(data)
+            df_stage1Combinations = pd.concat(
+                [df_stage1Combinations, df_newRow], ignore_index=True)
+
     setup.populatePredictionsList(df_stage1Combinations)
+    print(setup.predictionsList)
     setup.simulateTournament()
-    # assert (setup.getNode('R4W1').team1.teamID == 1135)
-    # assert (setup.getNode('R1W1').team1.teamID == '1135')
+    assert(setup.getNode('R6CH').winner != None)
 
+# assert (setup.getNode('R4W1').team1.teamID == 1135)
+# assert (setup.getNode('R1W1').team1.teamID == '1135')
 
 # def test_setup(setup):
 #     assert setup.root.left == setup.root.left.left.parent

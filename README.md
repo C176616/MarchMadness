@@ -17,3 +17,11 @@ implement the rest of the models
 implement train/test split
 allow download
 implement binary tree iterator
+
+
+test:
+
+python -m pytest
+
+deploy
+rsconnect deploy dash ./ --name lillyRSConnect --python .venv/Scripts/python.exe 

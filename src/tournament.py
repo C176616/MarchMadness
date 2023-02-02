@@ -139,7 +139,7 @@ class Tournament:
             the result, 1 if team 1 wins, 0 if team 2 wins. And the predicted
             value by which team 1 wins (between 0 and 1 expressed as a percent)
         """
-        gameID1 = '2022_' + str(int(team1ID)) + '_' + str((team2ID))
+        gameID1 = '2022_' + str(int(team1ID)) + '_' + str(int(team2ID))
         gameID2 = '2022_' + str(int(team2ID)) + '_' + str(int(team1ID))
 
         if upsets == True:
