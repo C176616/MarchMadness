@@ -251,7 +251,12 @@ app.layout = html.Div([
 def download_function(n_clicks):
     jsonData = jsonpickle.encode(tourn)
     print(jsonData)
-    return dict(content=jsonData, filename="Hello2.txt")
+    # out_file = open('bracket.json', 'w')
+    # json.dump(jsonData, out_file)
+    # return dcc.send_file('bracket.json')
+
+    # return dcc.send_file(json.dump(jsonData))
+    return dict(content=jsonData, filename="brackettext.txt")
 
 
 @app.callback(Output('o-heatmap-figure', 'figure'),
