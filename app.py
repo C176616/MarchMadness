@@ -233,7 +233,9 @@ app.layout = html.Div([
              }),
     html.Div([
         html.H2("Predict"),
-        html.Div([dcc.Graph(id='o-predicted-bracket', figure=bracket_figure)])
+        html.Div([dcc.Graph(id='o-predicted-bracket', figure=bracket_figure)]),
+        html.Button("Download Bracket", id="btn-download"),
+        dcc.Download(id="download-text")
     ],
              style={
                  'width': '100%',
@@ -241,6 +243,15 @@ app.layout = html.Div([
                  'vertical-align': 'top'
              })
 ])
+
+
+@app.callback(Output('download-text', 'data'),
+              Input("btn-download", "n_clicks"),
+              prevent_initial_call=True)
+def download_function(n_clicks):
+    jsonData = jsonpickle.encode(tourn)
+    print(jsonData)
+    return dict(content=jsonData, filename="Hello2.txt")
 
 
 @app.callback(Output('o-heatmap-figure', 'figure'),
@@ -589,7 +600,7 @@ def update_output(seasonRange, modelType, modelFeatures):
     # store the results to the df_modelResults which is tied to the table
     resultsData = df_modelResults.to_dict('records')
 
-    return heatmap_figure, resultsData, bracket_figure
+    return heatmap_figure, resultsData, bracket_figure,
 
 if __name__ == '__main__':
     app.run_server(debug=True)
