@@ -60,29 +60,69 @@ tourn.simulateTournament()
 
 # Create the initial heatmap figure
 df_corr = df_training_set.corr()
+df_corr = df_corr.sort_values(by=['Result'])
 heatmap_figure = go.Figure()
 heatmap_figure.add_trace(
     go.Heatmap(
         x=['Result'],
+        # y=df_corr.index,
         y=df_corr.index,
         z=np.array(df_corr),
         text=df_corr.values,
         texttemplate='%{text:.2f}',
     ))
 
-heatmap_figure.update_layout(template='plotly_dark')
+heatmap_figure.update_layout(template='plotly_dark', yaxis_nticks=len(df_corr))
 
 # Create the initial bracket figure
 bracket_figure = go.Figure()
 bracket_figure.update_layout(plot_bgcolor="#3c3c3c",
                              showlegend=False,
                              template='plotly_dark')
-bracket_figure.update_xaxes(showticklabels=False)
-bracket_figure.update_yaxes(showticklabels=False)
+bracket_figure.update_xaxes(showticklabels=False,
+                            showgrid=False,
+                            zeroline=False)
+bracket_figure.update_yaxes(showticklabels=False,
+                            showgrid=False,
+                            zeroline=False)
 
 # initialize a pandas dataframe to display the results of testing
 data = {'Season': [2022], 'Error': [0], 'Accuracy': [0]}
 df_modelResults = pd.DataFrame(data)
+
+legend_figure = go.Figure(data=[
+    go.Table(
+        header=dict(values=['Term', 'Meaning'],
+                    line_color='white',
+                    fill_color='#262626'),
+        cells=dict(values=[[
+            'Seed', 'Points For', 'FGM', 'FGA', 'FGM3', 'FGA3', 'FTM', 'FTA',
+            'OR', 'DR', 'Ast', 'TO', 'Stl', 'Blk', 'PF', 'WinPct'
+        ], [95, 85, 75, 95]],
+                   line_color='white',
+                   fill_color='#333333'),
+    )
+])
+df_legend = pd.DataFrame({
+    'Term': [
+        'Seed', 'PointsFor', 'FGM', 'FGA', 'FGM3', 'FGA3', 'FTM', 'FTA', 'OR',
+        'DR', 'Ast', 'TO', 'Stl', 'Blk', 'PF', 'WinPct'
+    ],
+    'Meaning': [
+        'How well the team is expected to do',
+        'Points the team scored throughout the season',
+        'Baskets the team made', 'Baskets the team attempted',
+        '3-pointers made', '3-pointers attempted', 'Free throws made',
+        'Free throws attempted', 'Offensive rebounds', 'Defensive rebounds',
+        'Assists', 'Time Outs', 'Steals', 'Blocks', 'Personal Fouls',
+        'Win Percentage'
+    ]
+})
+# legend_figure.update_layout(template='plotly_dark')
+# legend_figure.update_layout(plot_bgcolor="#3c3c3c",
+#                             showlegend=False,
+#                             template='plotly_dark')
+legend_figure.update_layout(showlegend=False, template='plotly_dark')
 
 load_figure_template("darkly")
 ################# app.layout
@@ -130,31 +170,44 @@ app.layout = html.Div([
                  'width': '30%',
                  'display': 'inline-block'
              }),
-    html.Div([
-        html.H2("Build"),
-        html.Div([
-            dcc.Dropdown(df_training_set.columns[4:],
-                         multi=True,
-                         id='i-model-features',
-                         placeholder="Select Features to Include"),
+    html.Div(
+        [
+            html.H2("Build"),
+            html.Div([
+                dcc.Dropdown(df_training_set.columns[4:],
+                             multi=True,
+                             id='i-model-features',
+                             placeholder="Select Features to Include"),
+            ],
+                     style={
+                         'width': '50%',
+                         'color': 'rgb(50,50,50)'
+                     }),
+            html.Br(),
+            html.Div([
+                dcc.RadioItems(
+                    ['Linear', 'Logistic', 'Random Forest', 'Neural Net'],
+                    'Linear',
+                    id='i-model-type'),
+            ]),
+            dash_table.DataTable(data=df_legend.to_dict('records'),
+                                 id='legendFigure',
+                                 style_header={
+                                     'backgroundColor': 'rgb(30, 30, 30)',
+                                     'color': 'white'
+                                 },
+                                 style_data={
+                                     'backgroundColor': 'rgb(50, 50, 50)',
+                                     'color': 'white'
+                                 },
+                                 style_table={'width': '75%'}),
         ],
-                 style={
-                     'width': '50%',
-                     'color': 'rgb(50,50,50)'
-                 }),
-        html.Br(),
-        html.Div([
-            dcc.RadioItems(
-                ['Linear', 'Logistic', 'Random Forest', 'Neural Net'],
-                'Linear',
-                id='i-model-type'),
-        ]),
-    ],
-             style={
-                 'width': '30%',
-                 'display': 'inline-block',
-                 'vertical-align': 'top'
-             }),
+        style={
+            'width': '25%',
+            'display': 'inline-block',
+            'vertical-align': 'top',
+            'margin-right': '20px'
+        }),
 
     #model creation
     #Features
@@ -216,14 +269,15 @@ def update_output(seasonRange, modelType, modelFeatures):
 
     df_corr = df_training_set[(df_training_set['Season'] >= seasonRange[0]) & (
         df_training_set['Season'] <= seasonRange[1])].corr()
-
+    df_corr = df_corr.sort_values(by=['Result'])
     heatmap_figure.add_trace(
         go.Heatmap(x=['Result'],
                    y=df_corr.index,
                    z=np.array(df_corr),
                    text=df_corr.values,
                    texttemplate='%{text:.2f}'))
-    heatmap_figure.update_layout(height=600, yaxis_nticks=len(df_corr))
+    heatmap_figure.update_layout(yaxis_nticks=len(df_corr),
+                                 template='plotly_dark')
     bracket_figure.update_layout(width=1600, height=1000)
 
     X = df_training_set[cols][(df_training_set['Season'] >= seasonRange[0])
@@ -522,7 +576,9 @@ def update_output(seasonRange, modelType, modelFeatures):
             textposition="top right",
             textfont=dict(family="sans serif", size=10, color="white")))
     # paper_bgcolor="grey"
-    bracket_figure.update_layout(plot_bgcolor="#3c3c3c", showlegend=False)
+    bracket_figure.update_layout(plot_bgcolor="#3c3c3c",
+                                 showlegend=False,
+                                 template='plotly_dark')
     bracket_figure.update_xaxes(showticklabels=False,
                                 showgrid=False,
                                 zeroline=False)
