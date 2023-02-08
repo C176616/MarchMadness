@@ -10,11 +10,17 @@ import pandas as pd
 import json
 import jsonpickle
 
+import plotly.express as px
+
 import plotly.graph_objects as go
+
+#app 2 is for viewing all bracket results in a folder
 
 app = dash.Dash(__name__)
 
-text_file = open('brackettext.txt', 'r')
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+
+text_file = open('masterBracket.txt', 'r')
 stringData = text_file.read()
 print(stringData)
 text_file.close()
@@ -27,10 +33,12 @@ print(jsonData)
 
 tourn = jsonpickle.decode(stringData)
 
-bracket_figure = go.Figure()
+# bracket_figure = go.Figure()
+bracket_figure = px.scatter()
 bracket_figure.update_layout(plot_bgcolor="#3c3c3c",
                              showlegend=False,
-                             template='plotly_dark')
+                             template='plotly_dark',
+                             clickmode='event+select')
 bracket_figure.update_xaxes(showticklabels=False,
                             showgrid=False,
                             zeroline=False)
@@ -58,6 +66,7 @@ def bintree_level(node, levels, x, y, width, side):
     yl = y - width / 2
 
     # print team1
+    print(node.value)
     bracket_figure.add_trace(
         go.Scatter(
             x=[x, xl],
@@ -66,8 +75,8 @@ def bintree_level(node, levels, x, y, width, side):
             line_color="white",
             name="Lines and Text",
             text=[
-                node.value + " " + str(node.winPct) + " " +
-                node.team1.getString()
+                node.value + " " + " " +
+                node.team1.getString() if node.team1 else " "
             ],
             #     text
             textposition=textPosition,
@@ -82,7 +91,10 @@ def bintree_level(node, levels, x, y, width, side):
             line_color="white",
             name="Lines and Text",
             textposition=textPosition,
-            text=[node.value + " " + node.team2.getString()],
+            text=[
+                node.value + " " +
+                node.team2.getString() if node.team2 else " "
+            ],
             #     text=['team2'],
             textfont=dict(family="sans serif", size=10, color="white")))
 
@@ -121,8 +133,8 @@ bracket_figure.add_trace(
         line_color="white",
         name="Lines and Text",
         text=[
-            tourn.root.left.value + " " + str(tourn.root.left.winPct) + " " +
-            tourn.root.team2.getString()
+            tourn.root.left.value + " " + " " +
+            tourn.root.team2.getString() if tourn.root.team2 else " "
         ],
         #     text
         textposition="top right",
@@ -137,8 +149,8 @@ bracket_figure.add_trace(
         line_color="white",
         name="Lines and Text",
         text=[
-            tourn.root.left.value + " " + str(tourn.root.left.winPct) + " " +
-            tourn.root.team1.getString()
+            tourn.root.left.value + " " + " " +
+            tourn.root.team1.getString() if tourn.root.team1 else " "
         ],
         #     text
         textposition="top right",
@@ -153,13 +165,16 @@ bracket_figure.add_trace(
         line_color="white",
         name="Lines and Text",
         text=[
-            tourn.root.left.value + " " + str(tourn.root.winPct) + " " +
-            tourn.root.winner.getString()
+            tourn.root.left.value + " " + " " +
+            tourn.root.winner.getString() if tourn.root.winner else " "
         ],
         #     text
         textposition="top right",
         textfont=dict(family="sans serif", size=10, color="white")))
 # paper_bgcolor="grey"
+
+styles = {'pre': {'border': 'thin lightgrey solid', 'overflowX': 'scroll'}}
+
 bracket_figure.update_layout(plot_bgcolor="#3c3c3c",
                              showlegend=False,
                              template='plotly_dark')
@@ -169,15 +184,25 @@ bracket_figure.update_xaxes(showticklabels=False,
 bracket_figure.update_yaxes(showticklabels=False,
                             showgrid=False,
                             zeroline=False)
+bracket_figure.update_layout(width=1600, height=1000)
 
-app.layout = html.Div(
-    [dcc.Graph(id='o-predicted-bracket', figure=bracket_figure)])
+app.layout = html.Div([
+    html.H2(tourn.author),
+    dcc.Graph(id='o-predicted-bracket', figure=bracket_figure),
+    html.Div([
+        html.H2(
+            "asdf",
+            id='click-data',
+        ),
+    ], ),
+])
 
 
-@app.callback()
-def update_output():
-
-    pass
+@app.callback(Output('click-data', 'children'),
+              Input('o-predicted-bracket', 'clickData'))
+def clickInput(clickData):
+    print(json.dumps(clickData, indent=2))
+    return json.dumps(clickData, indent=2)
 
 
 if __name__ == '__main__':

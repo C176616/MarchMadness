@@ -233,6 +233,7 @@ app.layout = html.Div([
              }),
     html.Div([
         html.H2("Predict"),
+        dcc.Input(id='i-name', type="text"),
         html.Div([dcc.Graph(id='o-predicted-bracket', figure=bracket_figure)]),
         html.Button("Download Bracket", id="btn-download"),
         dcc.Download(id="download-text")
@@ -263,8 +264,8 @@ def download_function(n_clicks):
               Output('o-results-table', 'data'),
               Output('o-predicted-bracket', 'figure'),
               Input('i-season-range', 'value'), Input('i-model-type', 'value'),
-              Input('i-model-features', 'value'))
-def update_output(seasonRange, modelType, modelFeatures):
+              Input('i-model-features', 'value'), Input("i-name", 'value'))
+def update_output(seasonRange, modelType, modelFeatures, authorName):
     """_summary_
 
     Parameters
@@ -277,7 +278,7 @@ def update_output(seasonRange, modelType, modelFeatures):
         _description_
     """
     cols = modelFeatures
-
+    tourn.author = authorName
     #clear the existing return variables
     df_modelResults = pd.DataFrame(columns=['Season', 'Error', 'Accuracy'])
     heatmap_figure = go.Figure()
@@ -497,7 +498,7 @@ def update_output(seasonRange, modelType, modelFeatures):
                 y=[yl, yl],
                 mode="lines+text",
                 line_color="white",
-                name="Lines and Text",
+                name=str(node.team1.getString()),
                 text=[
                     node.value + " " + str(node.winPct) + " " +
                     node.team1.getString()
@@ -513,7 +514,7 @@ def update_output(seasonRange, modelType, modelFeatures):
                 y=[yr, yr],
                 mode="lines+text",
                 line_color="white",
-                name="Lines and Text",
+                name=str(node.team2.getString()),
                 textposition=textPosition,
                 text=[node.value + " " + node.team2.getString()],
                 #     text=['team2'],
@@ -551,10 +552,10 @@ def update_output(seasonRange, modelType, modelFeatures):
             y=[-4, -4],
             mode="lines+text",
             line_color="white",
-            name="Lines and Text",
+            name=str(tourn.root.left.team2.teamID),
             text=[
-                tourn.root.left.value + " " + str(tourn.root.left.winPct) +
-                " " + tourn.root.team2.getString()
+                tourn.root.left.value + " " + " " +
+                tourn.root.team2.getString()
             ],
             #     text
             textposition="top right",
@@ -567,7 +568,7 @@ def update_output(seasonRange, modelType, modelFeatures):
             y=[4, 4],
             mode="lines+text",
             line_color="white",
-            name="Lines and Text",
+            name=str(tourn.root.left.team1.teamID),
             text=[
                 tourn.root.left.value + " " + str(tourn.root.left.winPct) +
                 " " + tourn.root.team1.getString()

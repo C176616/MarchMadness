@@ -20,6 +20,8 @@ class Tournament:
 
     Attributes
     -----------
+    author : str
+        The author of the tournament. 
     root : :obj: 'Game'
         A Game that represents the champions (root) of the tournament tree
     nodeList :obj:'list' :obj:'game"
@@ -31,6 +33,7 @@ class Tournament:
     """
 
     def __init__(self, root):
+        self.author = None
         self.root = root
         self.nodeList = []
         self.predictionsList = []
@@ -79,6 +82,14 @@ class Tournament:
         myiter = iter(self)
         for item in myiter:
             if item.value == nodeValue:
+                return item
+
+    def getNodeByTeamName(self, teamName):
+        myiter = iter(self)
+        for item in myiter:
+            if item.team1.teamName == teamName:
+                return item
+            elif item.team2.teamName == teamName:
                 return item
 
     def populateTeams(self, df_info):
