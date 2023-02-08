@@ -257,7 +257,7 @@ def download_function(n_clicks):
     # return dcc.send_file('bracket.json')
 
     # return dcc.send_file(json.dump(jsonData))
-    return dict(content=jsonData, filename="brackettext.txt")
+    return dict(content=jsonData, filename=tourn.author+"_"+"bracket.txt")
 
 
 @app.callback(Output('o-heatmap-figure', 'figure'),

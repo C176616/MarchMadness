@@ -120,24 +120,6 @@ def test_getMatchPrediction(setup):
 
 
 def test_simulateTournament(setup):
-    #     {
-    #     'Slot': ['R1W1'],
-    #     'StrongSeed': ['W1'],
-    #     'WeakSeed': ['W16'],
-    #     'Team1ID': [1135],
-    #     'Team1Name': ['Rose Hulman'],
-    #     'Team2ID': [1136],
-    #     'Team2Name': ['Purdue']
-    # }, {
-    #     'Slot': ['R4X1'],
-    #     'StrongSeed': ['X1'],
-    #     'WeakSeed': ['X16'],
-    #     'Team1ID': [1137],
-    #     'Team1Name': ['ISU'],
-    #     'Team2ID': [1138],
-    #     'Team2Name': ['Notre Dame']
-    # })
-    # dict = {'Slot':["R1W1",'R4X1', R4Y1]}
     df_info = pd.DataFrame([{
         'Slot': 'R1W1',
         'StrongSeed': 'W1',
@@ -146,30 +128,6 @@ def test_simulateTournament(setup):
         'Team1Name': 'Rose Hulman',
         'Team2ID': 1136,
         'Team2Name': 'Purdue'
-        # }, {
-        #     'Slot': 'R4X1',
-        #     'StrongSeed': 'X1',
-        #     'WeakSeed': 'X16',
-        #     'Team1ID': 1137,
-        #     'Team1Name': 'ISU',
-        #     'Team2ID': 1138,
-        #     'Team2Name': 'Notre Dame'
-        # }, {
-        #     'Slot': 'R4Y1',
-        #     'StrongSeed': 'Y1',
-        #     'WeakSeed': 'Y16',
-        #     'Team1ID': 1139,
-        #     'Team1Name': 'USI',
-        #     'Team2ID': 1140,
-        #     'Team2Name': 'UE'
-        # }, {
-        #     'Slot': 'R4Z1',
-        #     'StrongSeed': 'Z1',
-        #     'WeakSeed': 'Z16',
-        #     'Team1ID': 1141,
-        #     'Team1Name': 'Ivy Tech',
-        #     'Team2ID': 1142,
-        #     'Team2Name': 'Ball State'
     }])
     print(df_info)
 
@@ -196,7 +154,8 @@ def test_simulateTournament(setup):
     setup.populatePredictionsList(df_stage1Combinations)
     print(setup.predictionsList)
     setup.simulateTournament()
-    assert(setup.getNode('R6CH').winner != None)
+    assert (setup.getNode('R6CH').winner != None)
+
 
 # assert (setup.getNode('R4W1').team1.teamID == 1135)
 # assert (setup.getNode('R1W1').team1.teamID == '1135')
