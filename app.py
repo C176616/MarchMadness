@@ -22,6 +22,9 @@ from src.tournament import Tournament
 from src.matchPrediction import MatchPrediction
 from src.game import Game
 from src.team import Team
+
+from sklearn.neural_network import MLPClassifier
+from sklearn.preprocessing import StandardScaler
 """_summary_
 This app requires 
 training_set.csv
@@ -251,20 +254,23 @@ app.layout = html.Div([
               prevent_initial_call=True)
 def download_function(n_clicks):
     jsonData = jsonpickle.encode(tourn)
-    print(jsonData)
+    # print(jsonData)
     # out_file = open('bracket.json', 'w')
     # json.dump(jsonData, out_file)
     # return dcc.send_file('bracket.json')
 
     # return dcc.send_file(json.dump(jsonData))
-    return dict(content=jsonData, filename=tourn.author+"_"+"bracket.txt")
+    return dict(content=jsonData, filename=tourn.author + "_" + "bracket.txt")
 
 
 @app.callback(Output('o-heatmap-figure', 'figure'),
               Output('o-results-table', 'data'),
               Output('o-predicted-bracket', 'figure'),
-              Input('i-season-range', 'value'), Input('i-model-type', 'value'),
-              Input('i-model-features', 'value'), Input("i-name", 'value'))
+              Input('i-season-range', 'value'),
+              Input('i-model-type', 'value'),
+              Input('i-model-features', 'value'),
+              Input("i-name", 'value'),
+              prevent_initial_call=True)
 def update_output(seasonRange, modelType, modelFeatures, authorName):
     """_summary_
 
@@ -299,10 +305,11 @@ def update_output(seasonRange, modelType, modelFeatures, authorName):
 
     X = df_training_set[cols][(df_training_set['Season'] >= seasonRange[0])
                               & (df_training_set['Season'] <= seasonRange[1])]
+    print(X)
     y = df_training_set['Result'][
         (df_training_set['Season'] >= seasonRange[0])
         & (df_training_set['Season'] <= seasonRange[1])]
-
+    print(y)
     if modelType == 'Random Forest':
         print('random forest')
         RFClassifier = RandomForestClassifier(n_estimators=1)
@@ -412,7 +419,7 @@ def update_output(seasonRange, modelType, modelFeatures, authorName):
                     'Error': [error],
                     'Accuracy': [accuracy]
                 }
-                print(data)
+                # print(data)
                 df_newRow = pd.DataFrame(data)
                 df_modelResults = pd.concat([df_modelResults, df_newRow],
                                             ignore_index=True)
@@ -469,7 +476,79 @@ def update_output(seasonRange, modelType, modelFeatures, authorName):
                 df_modelResults = pd.concat([df_modelResults, df_newRow],
                                             ignore_index=True)
 
-    print("made it here1")
+    elif modelType == "Neural Net":
+        NeuralNetwork = MLPClassifier(solver='lbfgs',
+                                      hidden_layer_sizes=(100, ),
+                                      max_iter=2000)
+        scaler = StandardScaler()
+        scaler.fit(X)
+        X_train_scaled = scaler.transform(X)
+        NeuralNetwork.fit(X_train_scaled, y)
+
+        X_pred = df_training_set_stage2[cols]
+        scaler.fit(X_pred)
+        X_pred_scaled = scaler.transform(X_pred)
+        pred = NeuralNetwork.predict_proba(X_pred_scaled)[:, 1]
+        df_stage1Combinations['Pred'] = np.round(pred, 2)
+
+        #test the model
+        for year in range(seasonRange[0], seasonRange[1]):
+            if year != 2020:
+                X_test = df_training_set[df_training_set['Season'] ==
+                                         year][cols]
+                y_test = df_training_set[df_training_set['Season'] ==
+                                         year]['Result']
+
+                scaler.fit(X_test)
+                X_test_scaled = scaler.transform(X_test)
+                df_results = X_test
+                df_results['Prediction'] = NeuralNetwork.predict_proba(
+                    X_test_scaled)[:, 1]
+                df_results['Result'] = y_test
+
+                df_results.loc[df_results['Prediction'] > 0.9,
+                               'Prediction'] = 0.99
+                df_results.loc[df_results['Prediction'] < 0.1,
+                               'Prediction'] = 0.01
+
+                correct = df_results.loc[(df_results['Result'] == 0) & (
+                    df_results['Prediction'] < 0.5)].shape[0]
+                correct = correct + df_results.loc[
+                    (df_results['Result'] == 1)
+                    & (df_results['Prediction'] > 0.5)].shape[0]
+
+                total = df_results.shape[0]
+
+                accuracy = round(correct / total, 2)
+                # print("correct", correct)
+                # print("total", total)
+                # print("accuracy", accuracy)
+
+                error = round(
+                    -np.log(1 - df_results.loc[df_results['Result'] == 0]
+                            ['Prediction']).mean(), 2)
+                data = {
+                    'Season': [year],
+                    'Error': [error],
+                    'Accuracy': [accuracy]
+                }
+                # print(data)
+
+                # df_modelResults = df_modelResults.append(data, ignore_index=True)
+
+                df_newRow = pd.DataFrame(data)
+                df_modelResults = pd.concat([df_modelResults, df_newRow],
+                                            ignore_index=True)
+
+        # linearModel = linear_model.LinearRegression()
+        # linearModel.fit(X, y)
+
+        # X_pred = df_training_set_stage2[cols]
+        # pred = linearModel.predict(X_pred)
+        # df_stage1Combinations['Pred'] = np.round(pred, 2)
+        # # print(df_stage1Combinations)
+        # tourn.populatePredictionsList(df_stage1Combinations)
+    # print("made it here1")
 
     tourn.simulateTournament()
 

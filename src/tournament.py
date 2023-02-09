@@ -108,7 +108,7 @@ class Tournament:
             # if the 2nd array position is a 1 e.g. 'R1W5'
             if [*game.value][1] == '1':
                 slot = df_info[df_info['Slot'] == game.value]
-                print(slot['StrongSeed'].values[0])
+                # print(slot['StrongSeed'].values[0])
                 if slot.empty != True:
                     game.team1 = Team(slot['StrongSeed'].values[0],
                                       slot['Team1ID'].values[0],
@@ -199,7 +199,7 @@ class Tournament:
         """
         mIter = iter(self)
         for game in mIter:
-            print(game)
+            # print(game)
             result = self.getMatchPrediction(game.team1.teamID,
                                              game.team2.teamID, False)
             game.winPct = result[1]
@@ -207,16 +207,16 @@ class Tournament:
             # if this is the final game
             if (game.parent == None):
                 if (result[0] == 1):
-                    print(1)
+                    # print(1)
                     game.winner = game.team1
                 elif (result[0] == 0):
-                    print(2)
+                    # print(2)
                     game.winner = game.team2
 
             # if this game is a left branch, it becomes the next game's team 1
             elif (game == game.parent.left):
                 if (result[0] == 1):
-                    print(3)
+                    # print(3)
                     game.winner = game.team1
                     game.parent.team1 = game.team1
                 elif (result[0] == 0):
