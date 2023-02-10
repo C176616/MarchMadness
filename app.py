@@ -119,7 +119,7 @@ df_legend = pd.DataFrame({
         'Baskets the team made', 'Baskets the team attempted',
         '3-pointers made', '3-pointers attempted', 'Free throws made',
         'Free throws attempted', 'Offensive rebounds', 'Defensive rebounds',
-        'Assists', 'Time Outs', 'Steals', 'Blocks', 'Personal Fouls',
+        'Assists', 'Turnovers', 'Steals', 'Blocks', 'Personal Fouls',
         'Win Percentage'
     ]
 })
@@ -171,7 +171,7 @@ app.layout = html.Div([
                         },
                         id='i-season-range'),
     ],
-             style={'width': '30%'}),
+             style={'width': '75%'}),
     html.
     P('Here you can see the correlation values of each feature variable with our target variable'
       ),
@@ -183,7 +183,7 @@ app.layout = html.Div([
             ),
         ],
         style={
-            'width': '20%',
+            'width': '50%',
             'vertical-align': 'middle',
             'display': 'inline-block',
             'padding': '50px'
@@ -191,16 +191,26 @@ app.layout = html.Div([
     html.
     P('Select which features to include in your model. You can select as many as you would like, but features with a higher correlation value will result in a more accurate model.'
       ),
-    html.Div([
-        dcc.Dropdown(df_training_set.columns[4:],
-                     multi=True,
-                     id='i-model-features',
-                     placeholder="Select Features to Include"),
-    ],
-             style={
-                 'width': '50%',
-                 'color': 'rgb(50,50,50)'
-             }),
+    html.Div(
+        [
+            #
+            dbc.Col(dcc.Checklist(df_training_set.columns[4:],
+                                  id='i-model-features',
+                                  value=['deltaSeed'],
+                                  inline=False,
+                                  labelStyle={'display': 'block'}),
+                    width=5)
+        ], ),
+
+    #     dcc.Dropdown(df_training_set.columns[4:],
+    #                  multi=True,
+    #                  id='i-model-features',
+    #                  placeholder="Select Features to Include"),
+    # ],
+    #          style={
+    #              'width': '50%',
+    #              'color': 'rgb(50,50,50)'
+    #          }),
     html.
     P('Select the type of model you would like to use. These are the four main types of models covered in the seminar.'
       ),
@@ -232,7 +242,7 @@ app.layout = html.Div([
                  'vertical-align': 'top'
              }),
     html.
-    P('It will now use the model to predict winners of each matchup in a simulated tournament given starting seeds. You can download a .png of your bracket by hovering in the top right corner and clicking "Download plot as .png"'
+    P('It will now use the model to predict winners of each matchup in a simulated tournament given starting seeds. Each game is represented by a team 1 and a team 2. The percentage next to a team represents that it is team 1, and the percentage is the percent chance that team 1 will beat team 2. You can download a .png of your bracket by hovering in the top right corner and clicking "Download plot as .png". '
       ),
     html.Div([
         html.Div([dcc.Graph(id='o-predicted-bracket', figure=bracket_figure)]),
@@ -297,6 +307,7 @@ def update_output(seasonRange, modelType, modelFeatures, authorName):
 
     df_corr = df_training_set[(df_training_set['Season'] >= seasonRange[0]) & (
         df_training_set['Season'] <= seasonRange[1])].corr()
+    df_corr = df_corr.abs()
     df_corr = df_corr.sort_values(by=['Result'])
     heatmap_figure.add_trace(
         go.Heatmap(x=['Result'],
@@ -583,7 +594,10 @@ def update_output(seasonRange, modelType, modelFeatures, authorName):
                 mode="lines+text",
                 line_color="white",
                 name=str(node.team1.getString()),
-                text=[str(node.winPct) + " " + node.team1.getString()],
+                text=[
+                    " " + str(int(100 * node.winPct)) + "% " +
+                    node.team1.getString()
+                ],
                 #     text
                 textposition=textPosition,
                 textfont=dict(family="sans serif", size=10, color="white")))
@@ -634,10 +648,7 @@ def update_output(seasonRange, modelType, modelFeatures, authorName):
             mode="lines+text",
             line_color="white",
             name=str(tourn.root.left.team2.teamID),
-            text=[
-                tourn.root.left.value + " " + " " +
-                tourn.root.team2.getString()
-            ],
+            text=[" " + tourn.root.team2.getString()],
             #     text
             textposition="top right",
             textfont=dict(family="sans serif", size=10, color="white")))
@@ -651,8 +662,8 @@ def update_output(seasonRange, modelType, modelFeatures, authorName):
             line_color="white",
             name=str(tourn.root.left.team1.teamID),
             text=[
-                tourn.root.left.value + " " + str(tourn.root.left.winPct) +
-                " " + tourn.root.team1.getString()
+                " " + str(int(100 * tourn.root.winPct)) + "% " +
+                tourn.root.team1.getString()
             ],
             #     text
             textposition="top right",
@@ -666,10 +677,7 @@ def update_output(seasonRange, modelType, modelFeatures, authorName):
             mode="lines+text",
             line_color="white",
             name="Lines and Text",
-            text=[
-                tourn.root.left.value + " " + str(tourn.root.winPct) + " " +
-                tourn.root.winner.getString()
-            ],
+            text=[" " + tourn.root.winner.getString()],
             #     text
             textposition="top right",
             textfont=dict(family="sans serif", size=10, color="white")))
