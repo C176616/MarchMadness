@@ -63,6 +63,8 @@ tourn.simulateTournament()
 
 # Create the initial heatmap figure
 df_corr = df_training_set.corr()
+df_corr = df_corr.abs()
+
 df_corr = df_corr.sort_values(by=['Result'])
 heatmap_figure = go.Figure()
 heatmap_figure.add_trace(
@@ -90,7 +92,7 @@ bracket_figure.update_yaxes(showticklabels=False,
                             zeroline=False)
 
 # initialize a pandas dataframe to display the results of testing
-data = {'Season': [2022], 'Error': [0], 'Accuracy': [0]}
+data = {'Season': [2022], 'Error': [0], 'Accuracy (%)': [0]}
 df_modelResults = pd.DataFrame(data)
 
 legend_figure = go.Figure(data=[
@@ -130,92 +132,87 @@ legend_figure.update_layout(showlegend=False, template='plotly_dark')
 load_figure_template("darkly")
 ################# app.layout
 app.layout = html.Div([
-    # Header
-    html.H1("March Madness Machine Learning"),
-    # Heatmap Graph
+    # Explore
+    html.H1("March Madness - Machine Learning - 2023 Edition"),
+    html.
+    P('Welcome to the companion app for this year\'s IDM Engineering March Madness Machine Learning Seminar. This site is intended for use as a companion to the slides presented at the seminar'
+      ),
+    html.H2("Explore"),
+    html.
+    P("The first step in creating any good model is to take a look at the data provided. Here are some common terms that will be used:"
+      ),
+    dash_table.DataTable(data=df_legend.to_dict('records'),
+                         id='legendFigure',
+                         style_header={
+                             'backgroundColor': 'rgb(30, 30, 30)',
+                             'color': 'white'
+                         },
+                         style_data={
+                             'backgroundColor': 'rgb(50, 50, 50)',
+                             'color': 'white'
+                         },
+                         style_table={'width': '25%'}),
+    html.
+    P("Select which tournament seasons to include in the analysis. The recommended setting is to include all years."
+      ),
+
+    #heatmap div
     html.Div([
-        html.H2("Explore"),
-        html.Div(
-            [
-                dcc.Graph(
-                    id='o-heatmap-figure',
-                    figure=heatmap_figure,
-                ),
-            ],
-            style={
-                'width': '80%',
-                'vertical-align': 'middle',
-                'display': 'inline-block',
-                'padding': '50px'
-            }),
-        html.Div([
-            html.H3("Tournament Seasons to Include in Data:"),
-            dcc.RangeSlider(
-                df_training_set['Season'].min(),
-                df_training_set['Season'].max(),
-                step=None,
-                value=[
-                    df_training_set['Season'].min(),
-                    df_training_set['Season'].max()
-                ],
-                marks={
-                    str(Season): str(Season)
-                    for Season in df_training_set['Season'].unique()
-                },
-                id='i-season-range')
-        ],
-                 style={
-                     'width': '100%',
-                     'horizontal-align': 'middle'
-                 }),
+        dcc.RangeSlider(df_training_set['Season'].min(),
+                        df_training_set['Season'].max(),
+                        step=None,
+                        value=[
+                            df_training_set['Season'].min(),
+                            df_training_set['Season'].max()
+                        ],
+                        marks={
+                            str(Season): str(Season)
+                            for Season in df_training_set['Season'].unique()
+                        },
+                        id='i-season-range'),
     ],
-             style={
-                 'width': '30%',
-                 'display': 'inline-block'
-             }),
+             style={'width': '30%'}),
+    html.
+    P('Here you can see the correlation values of each feature variable with our target variable'
+      ),
     html.Div(
         [
-            html.H2("Build"),
-            html.Div([
-                dcc.Dropdown(df_training_set.columns[4:],
-                             multi=True,
-                             id='i-model-features',
-                             placeholder="Select Features to Include"),
-            ],
-                     style={
-                         'width': '50%',
-                         'color': 'rgb(50,50,50)'
-                     }),
-            html.Br(),
-            html.Div([
-                dcc.RadioItems(
-                    ['Linear', 'Logistic', 'Random Forest', 'Neural Net'],
-                    'Linear',
-                    id='i-model-type'),
-            ]),
-            dash_table.DataTable(data=df_legend.to_dict('records'),
-                                 id='legendFigure',
-                                 style_header={
-                                     'backgroundColor': 'rgb(30, 30, 30)',
-                                     'color': 'white'
-                                 },
-                                 style_data={
-                                     'backgroundColor': 'rgb(50, 50, 50)',
-                                     'color': 'white'
-                                 },
-                                 style_table={'width': '75%'}),
+            dcc.Graph(
+                id='o-heatmap-figure',
+                figure=heatmap_figure,
+            ),
         ],
         style={
-            'width': '25%',
+            'width': '20%',
+            'vertical-align': 'middle',
             'display': 'inline-block',
-            'vertical-align': 'top',
-            'margin-right': '20px'
+            'padding': '50px'
         }),
-
-    #model creation
-    #Features
+    html.
+    P('Select which features to include in your model. You can select as many as you would like, but features with a higher correlation value will result in a more accurate model.'
+      ),
     html.Div([
-        html.H2("Test"),
+        dcc.Dropdown(df_training_set.columns[4:],
+                     multi=True,
+                     id='i-model-features',
+                     placeholder="Select Features to Include"),
+    ],
+             style={
+                 'width': '50%',
+                 'color': 'rgb(50,50,50)'
+             }),
+    html.
+    P('Select the type of model you would like to use. These are the four main types of models covered in the seminar.'
+      ),
+    html.Div([
+        dcc.RadioItems(['Linear', 'Logistic', 'Random Forest', 'Neural Net'],
+                       'Linear',
+                       id='i-model-type'),
+    ]),
+    html.
+    P('The app will build your model and back-test it against all seasons selected. See the results in the table below. Error is the log loss error, accuracy is how many games were correctly predicted '
+      ),
+    html.Div([
         dash_table.DataTable(
             data=df_modelResults.to_dict('records'),
             id='o-results-table',
@@ -234,18 +231,26 @@ app.layout = html.Div([
                  'display': 'inline-block',
                  'vertical-align': 'top'
              }),
+    html.
+    P('It will now use the model to predict winners of each matchup in a simulated tournament given starting seeds. You can download a .png of your bracket by hovering in the top right corner and clicking "Download plot as .png"'
+      ),
     html.Div([
-        html.H2("Predict"),
-        dcc.Input(id='i-name', type="text"),
         html.Div([dcc.Graph(id='o-predicted-bracket', figure=bracket_figure)]),
-        html.Button("Download Bracket", id="btn-download"),
-        dcc.Download(id="download-text")
     ],
              style={
                  'width': '100%',
                  'display': 'inline-block',
                  'vertical-align': 'top'
-             })
+             }),
+    html.
+    P('If you are satisfied with your model and predicted bracket, type your name in the box below and hit the download button. Email the downloaded .json file to collins_kevin_a@lilly.com'
+      ),
+    dcc.Input(id='i-name', type="text"),
+    html.Button("Download Bracket", id="btn-download"),
+    dcc.Download(id="download-text")
+    # Build
+    # Test
+    # Predict
 ])
 
 
@@ -286,7 +291,7 @@ def update_output(seasonRange, modelType, modelFeatures, authorName):
     cols = modelFeatures
     tourn.author = authorName
     #clear the existing return variables
-    df_modelResults = pd.DataFrame(columns=['Season', 'Error', 'Accuracy'])
+    df_modelResults = pd.DataFrame(columns=['Season', 'Error', 'Accuracy (%)'])
     heatmap_figure = go.Figure()
     bracket_figure = go.Figure()
 
@@ -352,7 +357,7 @@ def update_output(seasonRange, modelType, modelFeatures, authorName):
                 # print("accuracy" + total)
                 # print(correct)
 
-                accuracy = round(correct / total, 2)
+                accuracy = 100 * round(correct / total, 2)
                 # print("accuracy", accuracy)
 
                 error = round(
@@ -362,7 +367,7 @@ def update_output(seasonRange, modelType, modelFeatures, authorName):
                 data = {
                     'Season': [year],
                     'Error': [error],
-                    'Accuracy': [accuracy]
+                    'Accuracy (%)': [accuracy]
                 }
                 # print(data)
 
@@ -404,7 +409,7 @@ def update_output(seasonRange, modelType, modelFeatures, authorName):
 
                 total = df_results.shape[0]
 
-                accuracy = round(correct / total, 2)
+                accuracy = 100 * round(correct / total, 2)
 
                 df_results.loc[df_results['Prediction'] > 0.9,
                                'Prediction'] = 0.99
@@ -417,7 +422,7 @@ def update_output(seasonRange, modelType, modelFeatures, authorName):
                 data = {
                     'Season': [year],
                     'Error': [error],
-                    'Accuracy': [accuracy]
+                    'Accuracy (%)': [accuracy]
                 }
                 # print(data)
                 df_newRow = pd.DataFrame(data)
@@ -455,7 +460,7 @@ def update_output(seasonRange, modelType, modelFeatures, authorName):
 
                 total = df_results.shape[0]
 
-                accuracy = round(correct / total, 2)
+                accuracy = 100 * round(correct / total, 2)
                 # print("correct", correct)
                 # print("total", total)
                 # print("accuracy", accuracy)
@@ -466,7 +471,7 @@ def update_output(seasonRange, modelType, modelFeatures, authorName):
                 data = {
                     'Season': [year],
                     'Error': [error],
-                    'Accuracy': [accuracy]
+                    'Accuracy (%)': [accuracy]
                 }
                 # print(data)
 
@@ -519,7 +524,7 @@ def update_output(seasonRange, modelType, modelFeatures, authorName):
 
                 total = df_results.shape[0]
 
-                accuracy = round(correct / total, 2)
+                accuracy = 100 * round(correct / total, 2)
                 # print("correct", correct)
                 # print("total", total)
                 # print("accuracy", accuracy)
@@ -530,7 +535,7 @@ def update_output(seasonRange, modelType, modelFeatures, authorName):
                 data = {
                     'Season': [year],
                     'Error': [error],
-                    'Accuracy': [accuracy]
+                    'Accuracy (%)': [accuracy]
                 }
                 # print(data)
 
@@ -578,10 +583,7 @@ def update_output(seasonRange, modelType, modelFeatures, authorName):
                 mode="lines+text",
                 line_color="white",
                 name=str(node.team1.getString()),
-                text=[
-                    node.value + " " + str(node.winPct) + " " +
-                    node.team1.getString()
-                ],
+                text=[str(node.winPct) + " " + node.team1.getString()],
                 #     text
                 textposition=textPosition,
                 textfont=dict(family="sans serif", size=10, color="white")))
@@ -595,7 +597,7 @@ def update_output(seasonRange, modelType, modelFeatures, authorName):
                 line_color="white",
                 name=str(node.team2.getString()),
                 textposition=textPosition,
-                text=[node.value + " " + node.team2.getString()],
+                text=[node.team2.getString()],
                 #     text=['team2'],
                 textfont=dict(family="sans serif", size=10, color="white")))
 
