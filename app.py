@@ -131,33 +131,47 @@ legend_figure.update_layout(showlegend=False, template='plotly_dark')
 
 load_figure_template("darkly")
 ################# app.layout
-app.layout = html.Div([
-    # Explore
-    html.H1("March Madness - Machine Learning - 2023 Edition"),
-    html.
-    P('Welcome to the companion app for this year\'s IDM Engineering March Madness Machine Learning Seminar. This site is intended for use as a companion to the slides presented at the seminar'
-      ),
-    html.H2("Explore"),
-    html.
-    P("The first step in creating any good model is to take a look at the data provided. Here are some common terms that will be used:"
-      ),
-    dash_table.DataTable(data=df_legend.to_dict('records'),
-                         id='legendFigure',
-                         style_header={
-                             'backgroundColor': 'rgb(30, 30, 30)',
-                             'color': 'white'
-                         },
-                         style_data={
-                             'backgroundColor': 'rgb(50, 50, 50)',
-                             'color': 'white'
-                         },
-                         style_table={'width': '25%'}),
-    html.
-    P("Select which tournament seasons to include in the analysis. The recommended setting is to include all years."
-      ),
 
-    #heatmap div
-    html.Div([
+card_intro = dbc.Card(
+    dbc.CardBody([
+        html.
+        P("Welcome to the companion app for this year\'s IDM Engineering March Madness Machine Learning Seminar. This site is intended for use as a companion to the slides presented at the seminar. If you have any questions contact Kevin Collins at collins_kevin_a@lilly.com",
+          className="card-text"),
+        html.
+        P("The code for this app is available at https://github.com/C176616/MarchMadness.git",
+          className="card-text")
+    ]))
+
+card_definitions = dbc.Card([
+    dbc.CardHeader("Explore"),
+    dbc.CardBody([
+        html.P(
+            "The first step in creating any good model is to take a look at the data provided. Here are some common terms that will be used:",
+            className="card-text",
+        ),
+        dash_table.DataTable(data=df_legend.to_dict('records'),
+                             id='legendFigure',
+                             style_header={
+                                 'backgroundColor': 'rgb(30, 30, 30)',
+                                 'color': 'white'
+                             },
+                             style_data={
+                                 'backgroundColor': 'rgb(50, 50, 50)',
+                                 'color': 'white'
+                             },
+                             style_table={
+                                 'marginLeft': 'auto',
+                                 'marginRight': 'auto'
+                             })
+    ])
+])
+
+card_seasonSlider = dbc.Card([
+    dbc.CardHeader("Filter"),
+    dbc.CardBody([
+        html.
+        P("Use the selecter to filter which data you would like to include in the analysis. Using all data is a good idea if you don't have a reason to filter out earlier or later years."
+          ),
         dcc.RangeSlider(df_training_set['Season'].min(),
                         df_training_set['Season'].max(),
                         step=None,
@@ -169,60 +183,54 @@ app.layout = html.Div([
                             str(Season): str(Season)
                             for Season in df_training_set['Season'].unique()
                         },
-                        id='i-season-range'),
-    ],
-             style={'width': '75%'}),
-    html.
-    P('Here you can see the correlation values of each feature variable with our target variable'
-      ),
-    html.Div(
-        [
-            dcc.Graph(
-                id='o-heatmap-figure',
-                figure=heatmap_figure,
-            ),
-        ],
-        style={
-            'width': '50%',
-            'vertical-align': 'middle',
-            'display': 'inline-block',
-            'padding': '50px'
-        }),
-    html.
-    P('Select which features to include in your model. You can select as many as you would like, but features with a higher correlation value will result in a more accurate model.'
-      ),
-    html.Div(
-        [
-            #
-            dbc.Col(dcc.Checklist(df_training_set.columns[4:],
-                                  id='i-model-features',
-                                  value=['deltaSeed'],
-                                  inline=False,
-                                  labelStyle={'display': 'block'}),
-                    width=5)
-        ], ),
+                        id='i-season-range')
+    ])
+])
 
-    #     dcc.Dropdown(df_training_set.columns[4:],
-    #                  multi=True,
-    #                  id='i-model-features',
-    #                  placeholder="Select Features to Include"),
-    # ],
-    #          style={
-    #              'width': '50%',
-    #              'color': 'rgb(50,50,50)'
-    #          }),
-    html.
-    P('Select the type of model you would like to use. These are the four main types of models covered in the seminar.'
-      ),
-    html.Div([
+card_heatmap = dbc.Card([
+    dbc.CardHeader("Correlation"),
+    dbc.CardBody([
+        html.
+        P("This is a correlation matrix of how each data feature relates to our target variable (Result). Use this information to select relevant features below"
+          ),
+        dcc.Graph(id='o-heatmap-figure',
+                  figure=heatmap_figure,
+                  className='w50')
+    ])
+])
+card_logo = dbc.Card(dbc.CardImg(src='assets/logo.png'))
+
+card_features = dbc.Card([
+    dbc.CardHeader("Feature Selection"),
+    dbc.CardBody([
+        html.
+        P("Select the features that you would like to include in your model. Select features with high correlation values for optimal results."
+          ),
+        dcc.Dropdown(df_training_set.columns[4:],
+                     id='i-model-features',
+                     value=['deltaSeed'],
+                     multi=True,
+                     style={
+                         'width': '90%',
+                         'color': 'rgb(50,50,50)'
+                     }),
+    ])
+])
+card_modelType = dbc.Card([
+    dbc.CardHeader("Model Selection"),
+    dbc.CardBody([
+        html.P("Select the type of model you would like to use"),
         dcc.RadioItems(['Linear', 'Logistic', 'Random Forest', 'Neural Net'],
                        'Linear',
                        id='i-model-type'),
-    ]),
-    html.
-    P('The app will build your model and back-test it against all seasons selected. See the results in the table below. Error is the log loss error, accuracy is how many games were correctly predicted '
-      ),
-    html.Div([
+    ])
+])
+card_resultsTable = dbc.Card([
+    dbc.CardHeader("Backtest Results"),
+    dbc.CardBody([
+        html.
+        P("The app will now build your model and back-test it against all the season selected. Error is log loss error, and accuracy is how many games were correctly predicted (expressed as a percent of total games)"
+          ),
         dash_table.DataTable(
             data=df_modelResults.to_dict('records'),
             id='o-results-table',
@@ -234,33 +242,43 @@ app.layout = html.Div([
                 'backgroundColor': 'rgb(50, 50, 50)',
                 'color': 'white'
             },
-        ),
-    ],
-             style={
-                 'width': '25%',
-                 'display': 'inline-block',
-                 'vertical-align': 'top'
-             }),
-    html.
-    P('It will now use the model to predict winners of each matchup in a simulated tournament given starting seeds. Each game is represented by a team 1 and a team 2. The percentage next to a team represents that it is team 1, and the percentage is the percent chance that team 1 will beat team 2. You can download a .png of your bracket by hovering in the top right corner and clicking "Download plot as .png". '
-      ),
-    html.Div([
-        html.Div([dcc.Graph(id='o-predicted-bracket', figure=bracket_figure)]),
-    ],
-             style={
-                 'width': '100%',
-                 'display': 'inline-block',
-                 'vertical-align': 'top'
-             }),
-    html.
-    P('If you are satisfied with your model and predicted bracket, type your name in the box below and hit the download button. Email the downloaded .json file to collins_kevin_a@lilly.com'
-      ),
-    dcc.Input(id='i-name', type="text"),
-    html.Button("Download Bracket", id="btn-download"),
-    dcc.Download(id="download-text")
-    # Build
-    # Test
-    # Predict
+        )
+    ])
+])
+card_bracket = dbc.Card([
+    dbc.CardHeader("Predicted Bracket"),
+    dbc.CardBody([
+        html.
+        P("The app will now use the model to predict winners of each matchup in a simulated tournament given starting seeds. Each game is represented by a team 1 and a team 2. The percentage next to a team represents that it is team 1, and the percentage is the percent chance that team 1 will beat team 2.  "
+          ),
+        dcc.Graph(id='o-predicted-bracket', figure=bracket_figure)
+    ])
+])
+card_download = dbc.Card([
+    dbc.CardHeader("Download"),
+    dbc.CardBody([
+        html.
+        P("If you are satisfied with your model and predicted bracket, type your name in the box below and hit the download button. Email the downloaded .json file to collins_kevin_a@lilly.com. Remember to only submit brackets for the 2023 tournament season!"
+          ),
+        dcc.Input(id='i-name', type="text"),
+        dbc.Button("Download Bracket", id="btn-download"),
+        dcc.Download(id="download-text")
+    ])
+])
+app.layout = html.Div([
+    # Explore
+    dbc.Container([
+        dbc.Row([dbc.Col(card_logo, width=4)], justify="center"),
+        dbc.Row([dbc.Col(card_intro, width=6)], justify="center"),
+        dbc.Row([dbc.Col(card_definitions, width=8)], justify="center"),
+        dbc.Row([dbc.Col(card_seasonSlider, width=6)], justify="center"),
+        dbc.Row([dbc.Col(card_heatmap, width=3)], justify="center"),
+        dbc.Row([dbc.Col(card_features, width=3)], justify="center"),
+        dbc.Row([dbc.Col(card_modelType, width=4)], justify="center"),
+        dbc.Row([dbc.Col(card_resultsTable, width=4)], justify="center"),
+        dbc.Row([dbc.Col(card_bracket)], justify="left"),
+        dbc.Row([dbc.Col(card_download, width=6)], justify="center")
+    ]),
 ])
 
 
@@ -321,11 +339,11 @@ def update_output(seasonRange, modelType, modelFeatures, authorName):
 
     X = df_training_set[cols][(df_training_set['Season'] >= seasonRange[0])
                               & (df_training_set['Season'] <= seasonRange[1])]
-    print(X)
+    print("x=", X)
     y = df_training_set['Result'][
         (df_training_set['Season'] >= seasonRange[0])
         & (df_training_set['Season'] <= seasonRange[1])]
-    print(y)
+    print("y=", y)
     if modelType == 'Random Forest':
         print('random forest')
         RFClassifier = RandomForestClassifier(n_estimators=1)
