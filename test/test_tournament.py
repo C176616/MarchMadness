@@ -98,7 +98,7 @@ def test_populatePredictionsList(setup):
     assert (setup.predictionsList[0].pred == 0.95)
 
 
-def test_getMatchPrediction(setup):
+def test_getMatchPrediction_noUpsets(setup):
     df_stage1Combinations = pd.DataFrame({
         'ID': ['2022_1135_1136'],
         'Pred': [0.95]
@@ -117,6 +117,17 @@ def test_getMatchPrediction(setup):
     assert (setup.getMatchPrediction('1136', '1135', False) == (0, 0.05))
     assert (setup.getMatchPrediction('1136', '1135', False) == (0, 0.05))
     assert (setup.getMatchPrediction('1135', '1136', False) == (1, 0.95))
+
+
+def test_getMatchPrediction_upsets(setup):
+    df_stage1Combinations = pd.DataFrame({
+        'ID': ['2022_1135_1136'],
+        'Pred': [0.99]
+    })
+    setup.populatePredictionsList(df_stage1Combinations)
+
+    assert (setup.getMatchPrediction('1135', '1136', True) == (1, 0.99))
+    assert (setup.getMatchPrediction('1136', '1135', True) == (0, 0.01))
 
 
 def test_simulateTournament(setup):
@@ -153,7 +164,7 @@ def test_simulateTournament(setup):
 
     setup.populatePredictionsList(df_stage1Combinations)
     print(setup.predictionsList)
-    setup.simulateTournament()
+    setup.simulateTournament(False)
     assert (setup.getNode('R6CH').winner != None)
 
 

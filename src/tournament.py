@@ -158,7 +158,8 @@ class Tournament:
 
             for i in self.predictionsList:
                 if i.ID == gameID1:
-                    if i.pred > randResult:
+                    print("first")
+                    if i.pred < randResult:
                         result = 0
                         return (result, i.pred)
                     else:
@@ -169,10 +170,10 @@ class Tournament:
                 if i.ID == gameID2:
                     if i.pred < randResult:
                         result = 1
-                        return (result, i.pred)
+                        return (result, round(1 - i.pred, 2))
                     else:
                         result = 0
-                        return (result, i.pred)
+                        return (result, round(1 - i.pred, 2))
 
         else:
             for i in self.predictionsList:
@@ -192,7 +193,7 @@ class Tournament:
                         result = 1
                         return (result, round(1 - i.pred, 2))
 
-    def simulateTournament(self):
+    def simulateTournament(self, upsets):
         """travels each game node, calculates a predicted winner and elevates
         that winner to the game node's parent game node based on if it is
         either a left or right branch.
@@ -201,7 +202,7 @@ class Tournament:
         for game in mIter:
             # print(game)
             result = self.getMatchPrediction(game.team1.teamID,
-                                             game.team2.teamID, False)
+                                             game.team2.teamID, upsets)
             game.winPct = result[1]
 
             # if this is the final game

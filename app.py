@@ -59,7 +59,7 @@ tourn = jsonpickle.decode(jsonData)
 tourn.populatePredictionsList(df_stage1Combinations)
 
 # simluate the tournament
-tourn.simulateTournament()
+# tourn.simulateTournament(False)
 
 # Create the initial heatmap figure
 df_corr = df_training_set.corr()
@@ -265,6 +265,16 @@ card_download = dbc.Card([
         dcc.Download(id="download-text")
     ])
 ])
+
+card_upsets = dbc.Card([
+    dbc.CardHeader("Enable Upsets"),
+    dbc.CardBody([
+        html.
+        P("Check the box below to enable upsets. By default, a team that is predicted to win will move on in the tournament. Checking this box will instead generate a random number between 0-1, and if the number is lower than the predicted result, the predicted team will move on. This leaves some room for randomness, but it is impossible to accurately predict an upset (that is, by definition, what makes it an upset!)"
+          ),
+        dcc.Checklist(['Enable Upsets'], id='i-enable-upsets')
+    ])
+])
 app.layout = html.Div([
     # Explore
     dbc.Container([
@@ -276,6 +286,7 @@ app.layout = html.Div([
         dbc.Row([dbc.Col(card_features, width=3)], justify="center"),
         dbc.Row([dbc.Col(card_modelType, width=4)], justify="center"),
         dbc.Row([dbc.Col(card_resultsTable, width=4)], justify="center"),
+        dbc.Row([dbc.Col(card_upsets)], justify="center"),
         dbc.Row([dbc.Col(card_bracket)], justify="left"),
         dbc.Row([dbc.Col(card_download, width=6)], justify="center")
     ]),
@@ -303,8 +314,10 @@ def download_function(n_clicks):
               Input('i-model-type', 'value'),
               Input('i-model-features', 'value'),
               Input("i-name", 'value'),
+              Input("i-enable-upsets", 'value'),
               prevent_initial_call=True)
-def update_output(seasonRange, modelType, modelFeatures, authorName):
+def update_output(seasonRange, modelType, modelFeatures, authorName,
+                  upsetsEnabled):
     """_summary_
 
     Parameters
@@ -585,7 +598,12 @@ def update_output(seasonRange, modelType, modelFeatures, authorName):
         # tourn.populatePredictionsList(df_stage1Combinations)
     # print("made it here1")
 
-    tourn.simulateTournament()
+    print(upsetsEnabled)
+    if upsetsEnabled == None:
+        upsetsEnabledBool = False
+    else:
+        upsetsEnabledBool = True
+    tourn.simulateTournament(upsetsEnabledBool)
 
     width_dist = 10
     depth_dist = 10
