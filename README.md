@@ -25,7 +25,7 @@ python -m pytest
 deploy
 rsconnect deploy dash ./ --name lillyRSConnect --python .venv/Scripts/python.exe 
 
-pip install --proxy http://C176616:K@C122022abc@proxy.gtm.lilly.com:9000 *whateverpackage*
+
 
 testing 
 coverage run -m pytest
