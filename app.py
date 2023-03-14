@@ -3,7 +3,7 @@ from itertools import cycle
 import json
 import jsonpickle
 
-from dash import Dash, dcc, html, Input, Output, dash_table
+from dash import Dash, dcc, html, Input, Output, dash_table, get_asset_url
 import dash_bootstrap_components as dbc
 from dash_bootstrap_templates import load_figure_template
 import matplotlib.pyplot as plt
@@ -13,6 +13,8 @@ import plotly.graph_objects as go
 import plotly.io as pio
 import pandas as pd
 import numpy as np
+
+from PIL import Image
 
 from sklearn import linear_model
 from sklearn.ensemble import RandomForestClassifier
@@ -198,8 +200,14 @@ card_heatmap = dbc.Card([
                   className='w50')
     ])
 ])
-card_logo = dbc.Card(dbc.CardImg(src='assets/logo.png'))
+# card_logo = dbc.Card(dbc.CardImg(src='assets/logo.png'))
 
+pil_image = Image.open("assets/logo_small.png")
+
+# card_logo = dbc.Card(
+#     dbc.CardImg(src=app.get_asset_url('logo.png'), alt="no image"))
+
+# card_logo = dbc.Card(dbc.CardImg(pil_image, alt="no image"))
 card_features = dbc.Card([
     dbc.CardHeader("Feature Selection"),
     dbc.CardBody([
@@ -261,7 +269,7 @@ card_download = dbc.Card([
         P("If you are satisfied with your model and predicted bracket, type your name in the box below and hit the download button. Email the downloaded .json file to collins_kevin_a@lilly.com. Remember to only submit brackets for the 2023 tournament season!"
           ),
         dcc.Input(id='i-name', type="text"),
-        dbc.Button("Download Bracket", id="btn-download"),
+        dbc.Button("Download Bracket", id="btn-download", color='secondary'),
         dcc.Download(id="download-text")
     ])
 ])
@@ -275,10 +283,19 @@ card_upsets = dbc.Card([
         dcc.Checklist(['Enable Upsets'], id='i-enable-upsets')
     ])
 ])
+
 app.layout = html.Div([
     # Explore
+
+    # html.Img(src=".\\assets\\logo.png", alt="no image"),
+    # html.Img(src=".\assets\logo.png", alt="no image"),
+    # html.Img(src=".//assets//logo.png", alt="no image"),
+    # html.Img(src="./assets/logo.png", alt="no image"),
+    # html.Img(src=app.get_asset_url('logo.png')),
+    # html.Img(src=get_asset_url('logo.png')),
     dbc.Container([
-        dbc.Row([dbc.Col(card_logo, width=4)], justify="center"),
+        dbc.Row([dbc.Col(html.Img(src=pil_image), width=4)], justify="center"),
+        # dbc.Row([dbc.Col(card_logo, width=4)], justify="center"),
         dbc.Row([dbc.Col(card_intro, width=6)], justify="center"),
         dbc.Row([dbc.Col(card_definitions, width=8)], justify="center"),
         dbc.Row([dbc.Col(card_seasonSlider, width=6)], justify="center"),
