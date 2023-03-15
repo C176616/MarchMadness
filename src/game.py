@@ -49,3 +49,6 @@ class Game():
 
     def __str__(self):
         return self.value
+
+    def getString(self):
+        return self.value

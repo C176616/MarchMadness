@@ -30,6 +30,7 @@ text_file.close()
 
 ## Import required data
 df_training_set = pd.read_csv('training_set.csv')
+#do not need this stage 2. TODO: remove this
 df_training_set_stage2 = pd.read_csv("training_set_stage2.csv")
 df_stage1Combinations = pd.read_csv(cwd +
                                     "/data_stage2/MSampleSubmissionStage2.csv")

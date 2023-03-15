@@ -83,9 +83,7 @@ heatmap_figure.update_layout(template='plotly_dark', yaxis_nticks=len(df_corr))
 
 # Create the initial bracket figure
 bracket_figure = go.Figure()
-bracket_figure.update_layout(plot_bgcolor="#3c3c3c",
-                             showlegend=False,
-                             template='plotly_dark')
+bracket_figure.update_layout(showlegend=False, template='plotly_white')
 bracket_figure.update_xaxes(showticklabels=False,
                             showgrid=False,
                             zeroline=False)
@@ -376,7 +374,7 @@ def update_output(seasonRange, modelType, modelFeatures, authorName,
     print("y=", y)
     if modelType == 'Random Forest':
         print('random forest')
-        RFClassifier = RandomForestClassifier(n_estimators=1)
+        RFClassifier = RandomForestClassifier(n_estimators=10)
         RFClassifier.fit(X, y)
 
         X_pred = df_training_set_stage2[cols]
@@ -493,7 +491,9 @@ def update_output(seasonRange, modelType, modelFeatures, authorName,
         linearModel = linear_model.LinearRegression()
         linearModel.fit(X, y)
 
+        print(df_training_set_stage2)
         X_pred = df_training_set_stage2[cols]
+        print(X_pred)
         pred = linearModel.predict(X_pred)
         df_stage1Combinations['Pred'] = np.round(pred, 2)
         # print(df_stage1Combinations)
@@ -646,7 +646,7 @@ def update_output(seasonRange, modelType, modelFeatures, authorName,
                 x=[x, xl],
                 y=[yl, yl],
                 mode="lines+text",
-                line_color="white",
+                line_color="black",
                 name=str(node.team1.getString()),
                 text=[
                     " " + str(int(100 * node.winPct)) + "% " +
@@ -654,7 +654,7 @@ def update_output(seasonRange, modelType, modelFeatures, authorName,
                 ],
                 #     text
                 textposition=textPosition,
-                textfont=dict(family="sans serif", size=10, color="white")))
+                textfont=dict(family="sans serif", size=10, color="black")))
 
         # print team2
         bracket_figure.add_trace(
@@ -662,12 +662,12 @@ def update_output(seasonRange, modelType, modelFeatures, authorName,
                 x=[x, xr],
                 y=[yr, yr],
                 mode="lines+text",
-                line_color="white",
+                line_color="black",
                 name=str(node.team2.getString()),
                 textposition=textPosition,
                 text=[node.team2.getString()],
                 #     text=['team2'],
-                textfont=dict(family="sans serif", size=10, color="white")))
+                textfont=dict(family="sans serif", size=10, color="black")))
 
         # print line connecting team1 and team 2
         bracket_figure.add_trace(
@@ -675,7 +675,7 @@ def update_output(seasonRange, modelType, modelFeatures, authorName,
                 x=[x, x],
                 y=[yl, yr],
                 mode="lines",
-                line_color="white",
+                line_color="black",
             ))
 
         #recursively call this function
@@ -701,12 +701,12 @@ def update_output(seasonRange, modelType, modelFeatures, authorName,
             x=[0, 10],
             y=[-4, -4],
             mode="lines+text",
-            line_color="white",
+            line_color="black",
             name=str(tourn.root.left.team2.teamID),
             text=[" " + tourn.root.team2.getString()],
             #     text
             textposition="top right",
-            textfont=dict(family="sans serif", size=10, color="white")))
+            textfont=dict(family="sans serif", size=10, color="black")))
 
     #print final left
     bracket_figure.add_trace(
@@ -714,7 +714,7 @@ def update_output(seasonRange, modelType, modelFeatures, authorName,
             x=[-10, 0],
             y=[4, 4],
             mode="lines+text",
-            line_color="white",
+            line_color="black",
             name=str(tourn.root.left.team1.teamID),
             text=[
                 " " + str(int(100 * tourn.root.winPct)) + "% " +
@@ -722,7 +722,7 @@ def update_output(seasonRange, modelType, modelFeatures, authorName,
             ],
             #     text
             textposition="top right",
-            textfont=dict(family="sans serif", size=10, color="white")))
+            textfont=dict(family="sans serif", size=10, color="black")))
 
     # print final winner
     bracket_figure.add_trace(
@@ -730,12 +730,12 @@ def update_output(seasonRange, modelType, modelFeatures, authorName,
             x=[-8, 8],
             y=[0, 0],
             mode="lines+text",
-            line_color="white",
+            line_color="black",
             name="Lines and Text",
             text=[" " + tourn.root.winner.getString()],
             #     text
             textposition="top right",
-            textfont=dict(family="sans serif", size=10, color="white")))
+            textfont=dict(family="sans serif", size=10, color="black")))
 
     # print pre-rounds
     # node = tourn.getNode('W12')
@@ -744,7 +744,7 @@ def update_output(seasonRange, modelType, modelFeatures, authorName,
     #         x=[-10, 0],
     #         y=[9, 9],
     #         mode="lines+text",
-    #         line_color="white",
+    #         line_color="black",
     #         name=str(node.team1.getString()),
     #         text=[
     #             " " + str(int(100 * node.winPct)) + "% " +
@@ -752,7 +752,7 @@ def update_output(seasonRange, modelType, modelFeatures, authorName,
     #         ],
     #         #     text
     #         textposition="top right",
-    #         textfont=dict(family="sans serif", size=10, color="white")))
+    #         textfont=dict(family="sans serif", size=10, color="black")))
 
     # # print team2
     # bracket_figure.add_trace(
@@ -760,18 +760,18 @@ def update_output(seasonRange, modelType, modelFeatures, authorName,
     #         x=[-10, 0],
     #         y=[8.5, 8.5],
     #         mode="lines+text",
-    #         line_color="white",
+    #         line_color="black",
     #         name=str(node.team2.getString()),
     #         textposition="top right",
     #         text=[node.team2.getString()],
     #         #     text=['team2'],
-    #         textfont=dict(family="sans serif", size=10, color="white")))
+    #         textfont=dict(family="sans serif", size=10, color="black")))
 
     nodesList = [
-        tourn.getNode('X11'),
-        tourn.getNode('W12'),
-        tourn.getNode('Z16'),
-        tourn.getNode('Y16')
+        tourn.getNode('X16'),
+        tourn.getNode('W16'),
+        tourn.getNode('Z11'),
+        tourn.getNode('Y11')
     ]
     coordinatesListX = [[-10, 0], [-10, 0], [-10, 0], [-10, 0], [0, 10],
                         [0, 10], [0, 10], [0, 10]]
@@ -785,7 +785,7 @@ def update_output(seasonRange, modelType, modelFeatures, authorName,
                 x=[coordinatesListX[2 * i][0], coordinatesListX[2 * i][1]],
                 y=[coordinatesListY[2 * i][0], coordinatesListY[2 * i][1]],
                 mode="lines+text",
-                line_color="white",
+                line_color="black",
                 name=str(node.team1.getString()),
                 text=[
                     " " + str(int(100 * node.winPct)) + "% " +
@@ -793,7 +793,7 @@ def update_output(seasonRange, modelType, modelFeatures, authorName,
                 ],
                 #     text
                 textposition="top right",
-                textfont=dict(family="sans serif", size=10, color="white")))
+                textfont=dict(family="sans serif", size=10, color="black")))
 
         # print team2
         bracket_figure.add_trace(
@@ -804,24 +804,26 @@ def update_output(seasonRange, modelType, modelFeatures, authorName,
                     coordinatesListY[2 * i + 1][1]
                 ],
                 mode="lines+text",
-                line_color="white",
+                line_color="black",
                 name=str(node.team2.getString()),
                 textposition="top right",
                 text=[node.team2.getString()],
                 #     text=['team2'],
-                textfont=dict(family="sans serif", size=10, color="white")))
+                textfont=dict(family="sans serif", size=10, color="black")))
         # print line connecting team1 and team 2
         bracket_figure.add_trace(
             go.Scatter(
                 x=[0, 0],
                 y=[coordinatesListY[2 * i][0], coordinatesListY[2 * i + 1][1]],
                 mode="lines",
-                line_color="white",
+                line_color="black",
             ))
 
-    bracket_figure.update_layout(plot_bgcolor="#3c3c3c",
-                                 showlegend=False,
-                                 template='plotly_dark')
+    bracket_figure.update_layout(showlegend=False, template='plotly_white')
+    #dark mode
+    # bracket_figure.update_layout(plot_bgcolor="#3c3c3c",
+    # #                              showlegend=False,
+    # #                              template='plotly_dark')
     bracket_figure.update_xaxes(showticklabels=False,
                                 showgrid=False,
                                 zeroline=False)
