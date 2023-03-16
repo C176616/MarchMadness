@@ -28,35 +28,40 @@ def scoreEntries():
     df_master_stage2 = pd.DataFrame(
         columns=["gameID", "actualWinner", "points"])
     for item in myiter:
-        gameID = item.value
-        if ([*gameID][0] == "R"):
-            points = dict_points[[*gameID][1]]
+        if item.winner is None:
+            pass
         else:
-            points = 1
-        df_newData = pd.DataFrame({
-            'gameID': [item.value],
-            'actualWinner': [item.winner.teamID],
-            'points': points
-        })
-        df_master_stage2 = pd.concat([df_master_stage2, df_newData],
-                                     ignore_index=True)
+            gameID = item.value
+            if ([*gameID][0] == "R"):
+                points = dict_points[[*gameID][1]]
+            else:
+                points = 1
+            df_newData = pd.DataFrame({
+                'gameID': [item.value],
+                'actualWinner': [item.winner.teamID],
+                'points': points
+            })
+            df_master_stage2 = pd.concat([df_master_stage2, df_newData],
+                                         ignore_index=True)
 
-        if item.team1 == item.winner:
-            result = 1
-        else:
-            result = 0
+            if item.team1 == item.winner:
+                result = 1
+            else:
+                result = 0
 
-        df_newData = pd.DataFrame({
-            'ID':
-            ["2022_" + str(item.team1.teamID) + "_" + str(item.team2.teamID)],
-            'Result': [result]
-        })
-        df_masterStage1 = pd.concat([df_masterStage1, df_newData],
-                                    ignore_index=True)
+            df_newData = pd.DataFrame({
+                'ID': [
+                    "2022_" + str(item.team1.teamID) + "_" +
+                    str(item.team2.teamID)
+                ],
+                'Result': [result]
+            })
+            df_masterStage1 = pd.concat([df_masterStage1, df_newData],
+                                        ignore_index=True)
 
     print(df_masterStage1)
 
-    submissionsDirectory = cwd + '//stage2Entries'
+    submissionsDirectory = cwd + '//submissions'
 
     files = glob.glob(submissionsDirectory + '/*.txt')
 
