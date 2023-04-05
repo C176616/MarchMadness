@@ -23,10 +23,10 @@ app = dash.Dash(__name__)
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-text_file = open('brackettext.txt', 'r')
-stringData = text_file.read()
-print(stringData)
-text_file.close()
+# text_file = open('brackettext.txt', 'r')
+# stringData = text_file.read()
+# print(stringData)
+# text_file.close()
 
 ## Import required data
 df_training_set = pd.read_csv('training_set.csv')
@@ -35,9 +35,24 @@ df_training_set_stage2 = pd.read_csv("training_set_stage2.csv")
 df_stage1Combinations = pd.read_csv(cwd +
                                     "/data_stage2/MSampleSubmissionStage2.csv")
 
+###### To start with a clean bracket ########
 # Open the pre-populated tournament layout JSON file
 with open('tournamentLayout.json', 'r') as f:
     jsonData = json.load(f)
+
+##############################################
+
+####### To open an existing master bracket ########
+# with open('masterBracket.txt', 'r') as f:
+# text_file = open('masterBracket.txt', 'r')
+# stringData = text_file.read()
+# text_file.close()
+
+# jsonData = json.loads(stringData)
+#############################################
+
+# with open('masterBracket.txt', 'r') as f:
+#     jsonData = json.load(f)
 
 tourn = jsonpickle.decode(jsonData)
 
@@ -84,8 +99,13 @@ app.layout = html.Div([
               Input("btn-download", "n_clicks"),
               prevent_initial_call=True)
 def download_function(n_clicks):
+    print("downloading")
     jsonData = jsonpickle.encode(tourn)
+    print(jsonData)
     return dict(content=jsonData, filename="masterBracket.txt")
+    # out_file = open('masterBracket.json', "w")
+    # json.dump(jsonData, out_file)
+    # out_file.close()
 
 
 @app.callback(Output('o-predicted-bracket', 'figure'),
@@ -229,6 +249,77 @@ def clickInput(clickData):
 
     # paper_bgcolor="grey"
 
+    # print first 4
+    nodesList = [
+        tourn.getNode('X16'),
+        tourn.getNode('W16'),
+        tourn.getNode('Z11'),
+        tourn.getNode('Y11')
+    ]
+    coordinatesListX = [[-10, 0], [-10, 0], [-10, 0], [-10, 0], [0, 10],
+                        [0, 10], [0, 10], [0, 10]]
+    coordinatesListY = [[9, 9], [8.5, 8.5], [8, 8], [7.5, 7.5], [-7.5, -7.5],
+                        [-8, -8], [-8.5, -8.5], [-9, -9]]
+
+    for i in range(4):
+        node = nodesList[i]
+        textposition = "top right",
+        textfont = dict(family="sans serif", size=10, color="black")
+
+        # thisValue = str(
+        #     node.value) + "_" + str(node.team1.teamName if node.team1 else " ")
+
+        bracket_figure.add_trace(
+            go.Scatter(
+                x=[coordinatesListX[2 * i][0], coordinatesListX[2 * i][1]],
+                y=[coordinatesListY[2 * i][0], coordinatesListY[2 * i][1]],
+                mode="lines+text",
+                line_color="black",
+                name=str(node.team1.getString()),
+                text=[
+                    " " + str(int(100 * node.winPct)) + "% " +
+                    node.team1.getString()
+                ],
+            )
+
+            #     text
+        )
+        thisKey = str(coordinatesListX[2 * i][0]) + "_" + str(
+            coordinatesListY[2 * i][0])
+        thisValue = [node.value, node.team1]
+        newDict = {thisKey: thisValue}
+        coordinateDict.update(newDict)
+
+        # print team2
+        bracket_figure.add_trace(
+            go.Scatter(
+                x=[coordinatesListX[2 * i + 1][0], coordinatesListX[2 * i][1]],
+                y=[
+                    coordinatesListY[2 * i + 1][0],
+                    coordinatesListY[2 * i + 1][1]
+                ],
+                mode="lines+text",
+                line_color="black",
+                name=str(node.team2.getString()),
+                textposition="top right",
+                text=[node.team2.getString()],
+                #     text=['team2'],
+                textfont=dict(family="sans serif", size=10, color="black")))
+        # print line connecting team1 and team 2
+        thisKey = str(coordinatesListX[2 * i + 1][0]) + "_" + str(
+            coordinatesListY[2 * i + 1][0])
+        thisValue = [node.value, node.team1]
+        newDict = {thisKey: thisValue}
+        coordinateDict.update(newDict)
+
+        bracket_figure.add_trace(
+            go.Scatter(
+                x=[0, 0],
+                y=[coordinatesListY[2 * i][0], coordinatesListY[2 * i + 1][1]],
+                mode="lines",
+                line_color="black",
+            ))
+
     styles = {'pre': {'border': 'thin lightgrey solid', 'overflowX': 'scroll'}}
 
     bracket_figure.update_layout(plot_bgcolor="#3c3c3c",
@@ -244,7 +335,7 @@ def clickInput(clickData):
 
     # jsonData = json.load(clickData)
     if (clickData):
-        # print(coordinateDict)
+        print(coordinateDict)
         target = str(clickData['points'][0]['x']) + "_" + str(
             clickData['points'][0]['y'])
         print(target)

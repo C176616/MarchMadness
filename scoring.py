@@ -2,6 +2,8 @@ import pandas as pd
 import json
 import jsonpickle
 
+import numpy as np
+
 from src.matchPrediction import MatchPrediction
 
 import os
@@ -20,6 +22,7 @@ def scoreEntries():
 
     jsonData = json.loads(stringData)
 
+    # print(jsonData)
     tourn = jsonpickle.decode(stringData)
     df_masterStage1 = pd.DataFrame(columns=['ID', 'Result'])
 
@@ -28,7 +31,8 @@ def scoreEntries():
     df_master_stage2 = pd.DataFrame(
         columns=["gameID", "actualWinner", "points"])
     for item in myiter:
-        if item.winner is None:
+        # print(item)
+        if item.winner is None or item.team1 is None or item.team2 is None:
             pass
         else:
             gameID = item.value
@@ -51,7 +55,7 @@ def scoreEntries():
 
             df_newData = pd.DataFrame({
                 'ID': [
-                    "2022_" + str(item.team1.teamID) + "_" +
+                    "2023_" + str(item.team1.teamID) + "_" +
                     str(item.team2.teamID)
                 ],
                 'Result': [result]
@@ -59,7 +63,7 @@ def scoreEntries():
             df_masterStage1 = pd.concat([df_masterStage1, df_newData],
                                         ignore_index=True)
 
-    print(df_masterStage1)
+    # print(df_masterStage1)
 
     submissionsDirectory = cwd + '//submissions'
 
@@ -88,8 +92,9 @@ def scoreEntries():
         df_compare['Pred'] = df_compare['Pred'].replace(1, 0.99)
         df_compare['Pred'] = df_compare['Pred'].replace(0, 0.01)
 
-        import numpy as np
         n = df_compare.shape[0]
+        # print(df_compare)
+        # print(n)
         df_compare = df_compare.assign(LogLoss=lambda x: (x['Result'] * np.log(
             x['Pred']) + (1 - x['Result']) * np.log(1 - x['Pred'])))
 
@@ -97,9 +102,9 @@ def scoreEntries():
             'Name': [tourn.author],
             'Result': [-(df_compare['LogLoss'].sum()) / n]
         })
+
         df_resultsList_stage1 = pd.concat([df_resultsList_stage1, df_newData],
                                           ignore_index=True)
-    print(df_resultsList_stage1)
 
     df_resultsList_stage2 = pd.DataFrame(columns=['Name', 'Points'])
     for file in files:
@@ -129,8 +134,9 @@ def scoreEntries():
         df_newData = pd.DataFrame({'Name': [tourn.author], 'Points': [points]})
         df_resultsList_stage2 = pd.concat([df_resultsList_stage2, df_newData],
                                           ignore_index=True)
-
-    print(df_resultsList_stage2)
+    # print(df_master_stage2)
+    print(df_resultsList_stage1.sort_values('Result'))
+    print(df_resultsList_stage2.sort_values('Points'))
 
 
 if __name__ == "__main__":
