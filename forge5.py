@@ -7,7 +7,6 @@ from src.matchPrediction import MatchPrediction
 import os
 import glob
 
-
 def scoreEntries():
     """This function will read in master bracket.
     It will then score all entries based on 
